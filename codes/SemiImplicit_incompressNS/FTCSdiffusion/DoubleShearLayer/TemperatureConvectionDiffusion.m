@@ -1,49 +1,50 @@
 % Convection + diffusion of the temperature field
 function Tnew = TemperatureConvectionDiffusion(u,v,T)
 
-global imax jmax dt dx dy lambda TB xb;
+global Nx Ny dt dx dy lambda;
 
 Tnew = T;
 
 dtdx = dt/dx;
 dtdy = dt/dy;
 
-for i=1:imax
-    for j=1:jmax
+for i=1:Nx
+    for j=1:Ny
         % x-flux
         if ( i==1 )
-            fp = 0.5*u(i+1,j)*( T(i+1,j) + T(i  ,j) ) - 0.5*abs(u(i+1,j))*( T(i+1,j) - T(i  ,j) );
-            fm = 0;
-            fp = fp - lambda*( T(i+1,j) - T(i  ,j) )/dx;    % diffusion lambda*T_x (Fourier law)
-        elseif( i==imax )
-            fp = 0;
-            fm = 0.5*u(i  ,j)*( T(i  ,j) + T(i-1,j) ) - 0.5*abs(u(i  ,j))*( T(i  ,j) - T(i-1,j) );
-            fm = fm - lambda*( T(i  ,j) - T(i-1,j) )/dx;    % diffusion lambda*T_x (Fourier law)
+            % advection:
+            fm = 0.5*u(i  ,j)*( T(i  ,j) + T(Nx,j) ) - 0.5*abs(u(i  ,j))*( T(i  ,j) - T(Nx,j) );
+            fp = 0.5*u(i+1,j)*( T(i+1,j) + T(i ,j) ) - 0.5*abs(u(i+1,j))*( T(i+1,j) - T(i ,j) );
+             % diffusion lambda*T_x (Fourier law):
+            fm = fm - lambda*( T(i  ,j) - T(Nx,j) )/dx;
+            fp = fp - lambda*( T(i+1,j) - T(i ,j) )/dx;
+        elseif( i==Nx )
+            fm = 0.5*u(i,j)*( T(i,j) + T(i-1,j) ) - 0.5*abs(u(i,j))*( T(i,j) - T(i-1,j) );
+            fp = 0.5*u(Nx+1,j)*( T(1,j) + T(i  ,j) ) - 0.5*abs(u(1,j))*( T(1,j) - T(i ,j) );
+            fm = fm - lambda*( T(i,j) - T(i-1,j) )/dx;
+            fp = fp - lambda*( T(1,j) - T(i  ,j) )/dx;
         else
-            fp = 0.5*u(i+1,j)*( T(i+1,j) + T(i  ,j) ) - 0.5*abs(u(i+1,j))*( T(i+1,j) - T(i  ,j) );
             fm = 0.5*u(i  ,j)*( T(i  ,j) + T(i-1,j) ) - 0.5*abs(u(i  ,j))*( T(i  ,j) - T(i-1,j) );
-            fp = fp - lambda*( T(i+1,j) - T(i  ,j) )/dx;    % diffusion lambda*T_x (Fourier law)
+            fp = 0.5*u(i+1,j)*( T(i+1,j) + T(i  ,j) ) - 0.5*abs(u(i+1,j))*( T(i+1,j) - T(i  ,j) );
             fm = fm - lambda*( T(i  ,j) - T(i-1,j) )/dx;
+            fp = fp - lambda*( T(i+1,j) - T(i  ,j) )/dx;
         end
        % y-fluxes 
         if(j==1)
-            if ( TB > 0 )
-                temp_bc = TB*exp(-0.5*( xb(i) - 0.5 )^2/0.1^2 );
-                gm = -lambda*( T(i,j) - temp_bc)/(dy/2);     % heating at the bottom
-            else
-                gm = 0;
-            end
+            gm = 0.5*v(i,j)*( T(i,j)+T(i,Ny)) - 0.5*abs(v(i,j))*(T(i,j)-T(i,Ny)); 
             gp = 0.5*v(i,j+1)*( T(i,j+1) + T(i,j) ) - 0.5*abs(v(i,j+1))*(T(i,j+1)-T(i,j));
-            gp = gp-lambda*(T(i,j+1)-T(i,j))/dy; % diffusion term T_yy            
-        elseif(j==jmax)
-            gp = 0;
+            gm = gm-lambda*(T(i,j)-T(i,Ny ))/dy; 
+            gp = gp-lambda*(T(i,j+1)-T(i,j))/dy;
+        elseif(j==Ny)
             gm = 0.5*v(i,j)*(T(i,j)+T(i,j-1)) - 0.5*abs(v(i,j))*(T(i,j)-T(i,j-1)); 
+            gp = 0.5*v(i,1)*( T(i,1) + T(i,j) ) - 0.5*abs(v(i,1))*( T(i,1) - T(i,j) );
             gm = gm-lambda*(T(i,j)-T(i,j-1))/dy; 
+            gp = gp-lambda*(T(i,1)-T(i,j  ))/dy;
         else
-            gp = 0.5*v(i,j+1)*( T(i,j+1) + T(i,j) ) - 0.5*abs(v(i,j+1))*( T(i,j+1) - T(i,j) );
             gm = 0.5*v(i,j  )*( T(i,  j)+T(i,j-1)) - 0.5*abs(v(i,j))*(T(i,j)-T(i,j-1)); 
-            gp = gp-lambda*(T(i,j+1)-T(i,j))/dy; % diffusion term T_yy 
+            gp = 0.5*v(i,j+1)*( T(i,j+1) + T(i,j) ) - 0.5*abs(v(i,j+1))*( T(i,j+1) - T(i,j) );
             gm = gm-lambda*(T(i,j)-T(i,j-1))/dy; 
+            gp = gp-lambda*(T(i,j+1)-T(i,j))/dy;
         end
         Tnew(i,j) = T(i,j) - dtdx*( fp - fm ) - dtdy*( gp - gm );
     end
