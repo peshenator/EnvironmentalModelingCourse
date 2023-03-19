@@ -1,5 +1,5 @@
 %  function for periodic BC
-function ind = bcind(j,J)
+function ind = bcj_1(j,J)
     if j==0
         ind = J;
     else
