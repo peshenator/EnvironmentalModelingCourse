@@ -1,0 +1,18 @@
+% Compute spatial differential operator of the energy equation
+function DxyT = SpaceDiff_T(T,Km,Kp)
+
+global dt dx Nx Ny;
+
+fm = zeros(Nx,Ny);
+fp = zeros(Nx,Ny);
+
+% X - direction
+
+fm(1)      =-Km(1)*( T(2:Nx) - T(1:Nx-1) )/dx;    % No heat influx through the left boundary
+fm(2:Nx  ) =-Km(2:Nx).*( T(2:Nx) - T(1:Nx-1) )/dx;     % discrete Fourier law
+fp(1:Nx-1) =-Kp(2:Nx).*( T(2:Nx) - T(1:Nx-1) )/dx;     % discrete Fourier law
+fp(Nx)     = 0;   % No heat influx through the right boundary
+
+DxyT = (dt/dx)*( fp - fm );
+
+end
