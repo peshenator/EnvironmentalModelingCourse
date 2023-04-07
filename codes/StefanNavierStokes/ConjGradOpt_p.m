@@ -1,7 +1,7 @@
 % Conjugate Gradient MATRIX-FREE method for the linear system A*x = b
 % INPUT:
 %     b -- right hand-side 
-function [x,err,i] = CGopt2D(b)
+function [x,err,i] = ConjGradOpt_p(b)
 
 tol = 1e-12;
 
@@ -10,7 +10,7 @@ x = b;                  % initial guess
 r = b - MultOpt2D_p(x); % initial residual 
 p = r;                  % initiate p_1
 err = sum(sum(r.*r));   % compute the norm of the residual = r(1)^2 + r(2)^2 +....
-err0 = err;             % save the very first residual
+err0 = err + tol;             % save the very first residual
 
  for i=1:N
      if (sqrt(err) < tol*sqrt(err0))
@@ -25,4 +25,4 @@ err0 = err;             % save the very first residual
      p = r + errnew/err*p;         % new conjugate vector
      err = errnew;
  end
- disp(strcat('Conjugate Gradient did not converge, residual = ',num2str(sqrt(err))));
+ disp(strcat('CG pressure did not converge, residual = ',num2str(sqrt(err))));

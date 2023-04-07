@@ -22,6 +22,6 @@ for k=1:N
     err = err_new;
 end
 
-% disp(strcat('Conjugate Gradient does not converge, res = ',num2str(err)))
+disp(strcat('CG u does not converge, res = ',num2str(err)))
 
 end

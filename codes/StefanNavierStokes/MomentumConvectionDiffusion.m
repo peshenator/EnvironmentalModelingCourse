@@ -1,7 +1,7 @@
 % implement the nonlnear advection and diffusion + buoyncy force (Bousinesque approximation)
 
 function [ustar,vstar] = MomentumConvectionDiffusion(u,v,T)
-global Nx Ny dt dx dy nu uLid beta T0 uWall vWall g;
+global Nx Ny dt dx dy nu uLid beta TrefBuyoncy uWall vWall g;
 
 ustar = u;
 vstar = v;
@@ -89,7 +89,7 @@ for i=1:Nx
             
             % add the buyoncy forces to the v velocity
             Tav = 0.5*(T(i,j)+T(i,j-1)); % T cell centre -> average
-            vstar(i,j) = vstar(i,j) + dt*beta*g*(Tav - T0);
+            vstar(i,j) = vstar(i,j) + dt*beta*g*(Tav - TrefBuyoncy);
         end
     end
 end

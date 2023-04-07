@@ -32,7 +32,7 @@ for i=1:Nx
         % y flux
         % TBC at the bottom withexponent function
         if(j==1)
-            Tbc = TBC*exp(-0.5*(xc(i)-0.5)^2/0.1^2);
+%             Tbc = TBC*exp(-0.5*(xc(i)-0.5)^2/0.1^2);
             gp = 0.5*v(i,j+1)*(T(i,j+1) + T(i,j  )) - 0.5*abs(v(i,j+1))*(T(i,j+1)-T(i,j  ));
             gm =0;
 %             gm =-lambda*(T(i,j) - Tbc)/(dy/2);
