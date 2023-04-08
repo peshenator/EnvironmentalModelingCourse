@@ -20,8 +20,8 @@ g = 9.81;       % accelaration due to gravity
 TBC = 2;        % Boundary condition temperature
 lambda = 1e-3;  % thermal diffusivity
 beta = 1;     % thermal expansion coefficient = drho/dT
-Tlake = 0;
-Tair  =-50;
+Tlake =+4;
+Tair  =-10;
 TrefBuyoncy = 0;        % reference temperature
 epsilonT = 0.05;        % regularization parameter near the solidification temperature
 
@@ -41,14 +41,14 @@ Ts   = Tc;
 
 % computational parameters
 time = 0;
-tend = 10000000;
+tend = 864000;
 
 xL = 0;
-xR = 1;
+xR = 2;
 yL = 0;
-yR = 1;
-Nx = 50;
-Ny = 50;
+yR = 2;
+Nx = 64;
+Ny = Nx;
 dx = (xR - xL)/Nx;
 dy = (yR - yL)/Ny;
 
@@ -58,7 +58,7 @@ x = linspace(xL,xR,Nx+1);             % x coordinates of the cell-edges
 y = linspace(yL,yR,Ny+1);             % y coordinates of the cell-edges
 [X,Y] = meshgrid(xb,yb);
 CFL = 0.9;                              % CFL number < 1
-dt_accel = 0;                        % a number between [0,1], 1 corresponds to the FTCS time step, 0 to fully BTCS
+dt_accel = 1e-3;                        % a number between [0,1], 1 corresponds to the FTCS time step, 0 to fully BTCS
 
 % initial  conditions
 u = zeros(Nx+1,Ny);                 % x component of the velocity vector (blue in the lectures) +1 because cell faces
@@ -74,7 +74,7 @@ rhs =zeros(Nx,Ny);                  % right hand-side for the pressure Poisson e
 %        T(i,j) = TrefBuyoncy - 0*exp(-0.5*( (xb(i) - 0.8 )^2 + (yb(j) - 0.75)^2)/0.1^2 ); %hot bubble
 %     end
 % end
-T = TrefBuyoncy - 0.0*randn(Nx,Ny);
+T = TrefBuyoncy + 4*ones(Nx,Ny);
 
 % Read data for the reference solution from files:
 % data are taken from Sverdrup et al. "Highly parallelisable simulations 
@@ -96,8 +96,8 @@ for n=1:nmax
 
     % impose the stability restriction on the time step (advection + diffusion)
     % restriction by convective (advection,umax,vamx) and parabolic part (diffusion,nu)
-    if max(umax,vmax) < 1e-3
-        dt = 100;
+    if max(umax,vmax) < 0.1
+        dt = 50/( max(kappaS,kappaL)/dx^2 + max(kappaS,kappaL)/dy^2 );
     else
         dt = CFL/( umax/dx + vmax/dy + dt_accel*2*nu*(1/dx^2 + 1/dy^2) );
     end% 
@@ -148,33 +148,33 @@ for n=1:nmax
     ub = 0.5*( u(2:Nx+1,:) + u(1:Nx,:) );
     vb = 0.5*( v(:,2:Ny+1) + v(:,1:Ny) );
     
-    subplot(1,2,1)
-    hold off
-    s = surf(xb,yb,sqrt(ub.^2+vb.^2)','EdgeColor','none','FaceColor','interp'); %sqrt(ub.^2+vb.^2)
-%     s = surf(xb(2:Nx-1),yb(2:Ny-1),abs(divuv(2:Nx-1,2:Ny-1))','EdgeColor','none','FaceColor','interp');
-    view([0 90]) % position the camera, vision angle
-    hold on 
-%     quiver(xb,yb,ub',vb','k');
-    title(strcat('Current time = ',num2str(time)))
-    xlabel('x [m]')
-    ylabel('y [m]')
-    %Z0 = get(s,'ZData');
-    %set(s,'ZData',Z0 - 10)
-    axis square;
-    colorbar;
+%     subplot(1,2,1)
+%     hold off
+%     s = surf(xb,yb,sqrt(ub.^2+vb.^2)','EdgeColor','none','FaceColor','interp'); %sqrt(ub.^2+vb.^2)
+% %     s = surf(xb(2:Nx-1),yb(2:Ny-1),abs(divuv(2:Nx-1,2:Ny-1))','EdgeColor','none','FaceColor','interp');
+%     view([0 90]) % position the camera, vision angle
+%     hold on 
+% %     quiver(xb,yb,ub',vb','k');
+%     title(strcat('Current time = ',num2str(time)))
+%     xlabel('x [m]')
+%     ylabel('y [m]')
+%     %Z0 = get(s,'ZData');
+%     %set(s,'ZData',Z0 - 10)
+%     axis square;
+%     colorbar;
 
-    subplot(1,2,2)
+%     subplot(1,2,2)
     s = surf(xb,yb,T','EdgeColor','none','FaceColor','interp'); %sqrt(ub.^2+vb.^2)
 %     s = surf(xb(2:Nx-1),yb(2:Ny-1),abs(divuv(2:Nx-1,2:Ny-1))','EdgeColor','none','FaceColor','interp');
     view([0 90]) % position the camera, vision angle
     hold on
-    contour(X,Y,T',[ Ts Ts ],'b', 'LineWidth', 2)
+%     contour(X,Y,T',[ Ts Ts ],'b', 'LineWidth', 2)
     hold off
 %     quiver(xb,yb,ub',vb','k');
     title(strcat('Current time = ',num2str(time)))
     xlabel('x [m]')
     ylabel('y [m]')
-    clim([-0.1 0])
+    % clim([-50 0])
     %Z0 = get(s,'ZData');
     %set(s,'ZData',Z0 - 10)
     axis square;

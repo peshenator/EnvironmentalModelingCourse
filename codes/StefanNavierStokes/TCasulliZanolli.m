@@ -2,8 +2,7 @@
 % Casulli and Zanolli
 
 function T = TCasulliZanolli(T)
-    global rhoS hs Ts
-    epsilon = 0.1;  % regularization parameter
+    global rhoS hs Ts epsilonT
     % physical parameters of water and ice [in SI units]
 
     % dt = d/( max(kappaS,kappaL)/dx^2 + max(kappaS,kappaL)/dy^2 );         % time step restriction of FTCS
@@ -13,7 +12,7 @@ function T = TCasulliZanolli(T)
     
     %%  Newsted Newton method of Casulli & Zanolli
     tol = 1e-12*rhoS*hs;
-    T0 = min(T0,Ts-epsilon); % Initial guess for the outer iterations, see the paper by Casulli & Zanolli
+    T0 = min(T0,Ts-epsilonT); % Initial guess for the outer iterations, see the paper by Casulli & Zanolli
     MaxNewton = 100;
     % ----- OUTER iterations -------
     for iouter = 1:MaxNewton
@@ -24,7 +23,7 @@ function T = TCasulliZanolli(T)
         end
         Talpha = T0; % we store the value of the temperature so that from now on the meaning of T0 is T^(alpha,beta)
         % ----- INNER iterations ------
-        T0 = max(T0,Ts-epsilon);   % Initial guess for the inner iterations, see the paper by Casulli & Zanolli
+        T0 = max(T0,Ts-epsilonT);   % Initial guess for the inner iterations, see the paper by Casulli & Zanolli
         for iinner = 1:MaxNewton
             [ResInner,dQ12] = ResidualInner(T0,Talpha,Kmx,Kpx,Kmy,Kpy,rhs);    % Compute the residual of the inner iterations and the Jacobian of Q=Q1-Q2
             ResInner_norm = norm(ResInner);
