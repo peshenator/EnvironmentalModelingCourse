@@ -1,7 +1,7 @@
 % Matrix-free conjugate gradient for A*x = b
 function [x,err,k] = CG_v_vel(b,Tb,Tc)
 
-tol = 1e-12;
+tol = 1e-9;
 
 N = numel(b);
 x = b;          % initial guess for the solution
