@@ -11,7 +11,7 @@ err = sum(sum(r.*r));           % error
 err0 = err;
 
 for k=1:N
-    if (err < tol*sqrt(err0))
+    if (sqrt(err) < tol*sqrt(err0))
         return
     end
     Ap = MatVecProd(p,bathb,Hmx,Hpx,Hmy,Hpy,wet);

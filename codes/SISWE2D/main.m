@@ -1,6 +1,6 @@
 % Semi-implicit scheme of Casulli for the 2D shallow water equations with wetting and drying
 clear;
-close all;
+% close all;
 
 global g gamma Nx Ny dx dy dt;
 
@@ -12,8 +12,8 @@ xR = 5;
 yL =-5;
 yR = 5;
 % method parameters
-Nx = 32;
-Ny = 32;
+Nx = 128;
+Ny = 128;
 dx = (xR-xL)/Nx;
 dy = (yR-yL)/Ny;
 
@@ -49,7 +49,7 @@ Nt = 100000000;
 for n = 1:Nt
     umax = max(max(abs(u)));
     vmax = max(max(abs(v)));
-    if (max(umax,vmax) < 1)
+    if (max(umax,vmax) < 10)
         dt = 0.1;
     else
         dt = CFL/( umax/dx + vmax/dy );         % time step restriction of FTCS
@@ -60,32 +60,35 @@ for n = 1:Nt
     if(t >= tend)
         break
     end
-    
+    if( t >= 3.7)
+        zz=1;
+    end
     Hb = max(0,etab + bathb);
     % compute total water depth on the cell faces
-    % [Hmx,Hpx,Hmy,Hpy,rhsb,Hx,Hy] = LinearPartCoef(etab,bathb,bathx,bathy,u,v); 
     [Hmx,Hpx,Hmy,Hpy,rhsb,Hx,Hy] = LinearPartCoef(Hb,u,v); 
 
     % Newton-type iterations
     kMax = 100;
     for k = 1:kMax
         % determine the wet cells
-        wet = ((0.5*(Hpx + Hmx) > 0) + (0.5*(Hpy + Hmy) > 0)) > 0;
+        Hb = max(0,etab + bathb);
+        wet = Hb > 0; %((0.5*(Hpx + Hmx) > 0) + (0.5*(Hpy + Hmy) > 0)) > 0;
         Teta = MatVecProd(etab,bathb,Hmx,Hpx,Hmy,Hpy,wet);
         residual = Teta - rhsb;
         res_norm = norm(residual);
-        etab = etab - CGSolver(residual,bathb,Hmx,Hpx,Hmy,Hpy,wet);
-        if(max(max(abs(residual)))<1e-10)
+        if(max(max(abs(residual)))<1e-12)
             break
         end
+        etab = etab - CGSolver(residual,bathb,Hmx,Hpx,Hmy,Hpy,wet);
     end
     % update the velocity
-%     [u,v] = VelocityUpdate(u,v,etab,Hx,Hy);
+    [u,v] = VelocityUpdate(u,v,etab,Hx,Hy);
 
     t = t + dt;
     % plot initial conditions
     surf(xb,yb,etab,'EdgeColor','none','FaceColor','interp');
-%     axis equal;
+    axis([xL xR yL yR 0 1])
+    title(strcat('t=',num2str(t)))
     pause(0.001)
 end
 

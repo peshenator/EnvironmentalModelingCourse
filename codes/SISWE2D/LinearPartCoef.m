@@ -13,18 +13,23 @@ Hpx(Nx    ,:) = Hb(Nx,:);
 
 Hmy(:,1     ) = Hb(:,1);
 Hmy(:,2:Ny  ) = max(Hb(:,2:Ny) , Hb(:,1:Ny-1)); % total water depth on the cell faces [1:Nx]   in x
-Hpy(:,1:Ny-1) = Hmx(:,2:Ny);
+Hpy(:,1:Ny-1) = Hmy(:,2:Ny);
 Hpy(:,Ny    ) = Hb(:,Ny);
 
 % these we need to store for the velocity update
-Hx = Hmx./(Hmx + dt*gamma);
-Hy = Hmy./(Hmy + dt*gamma);
+bool = (Hmx == 0); 
+Hx = Hmx./(Hmx + dt*gamma + bool);
+bool = (Hmy == 0); 
+Hy = Hmy./(Hmy + dt*gamma + bool);
 
-
-Hmx = Hmx.^2./(Hmx + dt*gamma);
-Hpx = Hpx.^2./(Hpx + dt*gamma);
-Hmy = Hmy.^2./(Hmy + dt*gamma);
-Hpy = Hpy.^2./(Hpy + dt*gamma);
+bool = (Hmx == 0); 
+Hmx = Hmx.^2./(Hmx + dt*gamma + bool);
+bool = (Hpx == 0); 
+Hpx = Hpx.^2./(Hpx + dt*gamma + bool);
+bool = (Hmy == 0); 
+Hmy = Hmy.^2./(Hmy + dt*gamma + bool);
+bool = (Hpy == 0); 
+Hpy = Hpy.^2./(Hpy + dt*gamma + bool);
 
 % compute the right hand side of the eta system
 
