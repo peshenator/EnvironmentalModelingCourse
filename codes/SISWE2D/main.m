@@ -6,14 +6,14 @@ global g gamma Nx Ny dx dy dt;
 
 %  physical parameters
 g = 9.81;       % acceleration due to gravity
-gamma = 0;   % bottom friction coefficient
+gamma = 0.000;   % bottom friction coefficient
 xL =-5;
 xR = 5;
 yL =-5;
 yR = 5;
 % method parameters
 Nx = 128;
-Ny = 128;
+Ny = Nx;
 dx = (xR-xL)/Nx;
 dy = (yR-yL)/Ny;
 
@@ -32,7 +32,8 @@ CFL  = 0.9;    % Courant-Friedrichs-Levi number <= 1
 tmp = 1;
 [Xb,Yb] = meshgrid(xb,yb);
 [X ,Y ] = meshgrid(x ,y );
-etab  = 0.01 + exp(-( Xb.^2 + Yb.^2 )/(2*tmp^2)); % free surface elevation measured from the rest level
+etab  = 0.01 + exp(-( (Xb-0).^2 + (Yb-0).^2 )/(2*tmp^2)); % free surface elevation measured from the rest level
+% etab  = etab + 0.01 + exp(-( (Xb+3).^2 + (Yb+4).^2 )/(2*tmp^2)); % free surface elevation measured from the rest level
 bathb = bathymetry(Xb,Yb); % bathymetry in the cell centers
 bathx = bathymetry(X ,Yb); % bathymetry on the cell faces in x
 bathy = bathymetry(Xb,Y ); % bathymetry on the cell faces in y
@@ -49,7 +50,7 @@ Nt = 100000000;
 for n = 1:Nt
     umax = max(max(abs(u)));
     vmax = max(max(abs(v)));
-    if (max(umax,vmax) < 10)
+    if (max(umax,vmax) < 0.1)
         dt = 0.1;
     else
         dt = CFL/( umax/dx + vmax/dy );         % time step restriction of FTCS
@@ -63,6 +64,10 @@ for n = 1:Nt
     if( t >= 3.7)
         zz=1;
     end
+
+%     [u,v] = MomAdvection1(u,v);
+    [u,v] = MomentumConvection(u,v);
+    
     Hb = max(0,etab + bathb);
     % compute total water depth on the cell faces
     [Hmx,Hpx,Hmy,Hpy,rhsb,Hx,Hy] = LinearPartCoef(Hb,u,v); 
@@ -72,7 +77,7 @@ for n = 1:Nt
     for k = 1:kMax
         % determine the wet cells
         Hb = max(0,etab + bathb);
-        wet = Hb > 0; %((0.5*(Hpx + Hmx) > 0) + (0.5*(Hpy + Hmy) > 0)) > 0;
+        wet = Hb > 0;
         Teta = MatVecProd(etab,bathb,Hmx,Hpx,Hmy,Hpy,wet);
         residual = Teta - rhsb;
         res_norm = norm(residual);
@@ -86,8 +91,11 @@ for n = 1:Nt
 
     t = t + dt;
     % plot initial conditions
-    surf(xb,yb,etab,'EdgeColor','none','FaceColor','interp');
+    surf(xb,yb,etab','EdgeColor','none','FaceColor','interp');
     axis([xL xR yL yR 0 1])
+    xlabel('x')
+    ylabel('y')
+%     view([0 90])
     title(strcat('t=',num2str(t)))
     pause(0.001)
 end
