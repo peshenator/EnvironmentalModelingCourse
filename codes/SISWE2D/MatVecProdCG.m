@@ -1,4 +1,4 @@
-function Teta = MatVecProd(etab,bathb,Hmx,Hpx,Hmy,Hpy,wet)
+function Teta = MatVecProdCG(etab,bathb,Hmx,Hpx,Hmy,Hpy,wet)
 
 % This function computes the matrix-vector product T*eta
 global g dt dx dy Nx Ny
@@ -25,6 +25,6 @@ fp(:,  Ny  ) = 0; %Hpy(:,  Ny  ).*( 0            - etab(:,  Ny  ) );
 
 Teta = Teta - ky*( fp - fm );
 
-% Teta = Teta + wet.*(etab - bathb);
+Teta = Teta + wet.*etab;
 
 end

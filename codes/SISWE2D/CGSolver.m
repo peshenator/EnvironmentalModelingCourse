@@ -5,7 +5,7 @@ tol = 1e-12;
 
 N = numel(rhs);
 x = rhs;                     % initial guess for the solution
-r = rhs - MatVecProd(x,bathb,Hmx,Hpx,Hmy,Hpy,wet);    % initial residual
+r = rhs - MatVecProdCG(x,bathb,Hmx,Hpx,Hmy,Hpy,wet);    % initial residual
 p = r;                     % first vector of the basis of conjugate vectors
 err = sum(sum(r.*r));           % error
 err0 = err;
@@ -14,7 +14,7 @@ for k=1:N
     if (sqrt(err) < tol*sqrt(err0))
         return
     end
-    Ap = MatVecProd(p,bathb,Hmx,Hpx,Hmy,Hpy,wet);
+    Ap = MatVecProdCG(p,bathb,Hmx,Hpx,Hmy,Hpy,wet);
     alpha = err/sum(sum(p.*Ap));    % coefficients in x = alpha_i*p_i
     x = x + alpha*p;                % next approximation to the solution
     r = r - alpha*Ap;               % update the residual
@@ -23,6 +23,6 @@ for k=1:N
     err = err_new;
 end
 
-% disp(strcat('Conjugate Gradient does not converge, res = ',num2str(err)))
+disp(strcat('CG does NOT converge, residual = ',num2str(err)))
 
 end
