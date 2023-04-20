@@ -5,8 +5,8 @@ clear;
 global g gamma Nx Ny dx dy dt;
 
 %  physical parameters
-xL =-2; xR = 2; 
-yL =-2; yR = 2;
+xL =-5; xR = 5; 
+yL =-5; yR = 5;
 g = 9.81;       % acceleration due to gravity
 gamma = 0;   % bottom friction coefficient
 
@@ -36,10 +36,10 @@ CFL = 0.9;    % Courant-Friedrichs-Levi number <= 1
 % bathb = zeros(Nx,Ny);
 
 % *** test #2: Smooth wave with wetting/drying
-dt0 = 0.01;
-tend = 10;
-etab  = 0.01 + exp(-( (Xb-0).^2 + (Yb-0).^2 )/(2*0.1^2)); % free surface elevation measured from the rest level
-bathb = zeros(Nx,Ny);
+% dt0 = 0.01;
+% tend = 10;
+% etab  = 0.01 + exp(-( (Xb-0).^2 + (Yb-0).^2 )/(2*0.1^2)); % free surface elevation measured from the rest level
+% bathb = zeros(Nx,Ny);
 
 % *** test #3: 1D dam break over a bottom with a step
 % tend = 1;
@@ -51,7 +51,7 @@ bathb = zeros(Nx,Ny);
 % etab = 0.5*(etal + etar) + 0.5*(etar - etal)*erf(Xb'/0.1);
 % bathb= 0.5*(bl   + br  ) + 0.5*(br   - bl  )*erf(Xb'/0.1);
 
-% *** test 5.3. Two-dimensional cylindrical dambreak over a bottom step, DOI:10.1016/j.amc.2013.02.041
+% *** test #4: Two-dimensional cylindrical dambreak over a bottom step
 % tend = 0.2;
 % dt0=2e-3;
 % r0   = 1;
@@ -61,6 +61,12 @@ bathb = zeros(Nx,Ny);
 % br   = 0;
 % etab = 0.5*(etal + etar) + 0.5*(etar - etal)*erf((sqrt(Xb.^2+Yb.^2) - r0)/0.1);
 % bathb= 0.5*(bl   + br  ) + 0.5*(br   - bl  )*erf((sqrt(Xb.^2+Yb.^2) - r0)/0.1);
+
+% *** test #5:
+dt0 = 0.01;
+tend = 10;
+etab = 0.01 + 1.5*exp(-( (Xb-0).^2 + (Yb-0).^2 )/(2*0.4^2));%0.1*Xb';
+bathb = -1 + 0.1*Xb'.^2 + 0.1*Yb'.^2;
 
 u = zeros(Nx+1,Ny); % x-velocity at the cell faces
 v = zeros(Nx,Ny+1); % y-velocity at the cell faces 
@@ -108,18 +114,30 @@ for n = 1:Nt
     [u,v] = VelocityUpdate(u,v,etab,Hx,Hy);
 
     t = t + dt;
-    % plot initial conditions
+    
+    %% Postprocessing and plotting
+    etabPlot = etab;
+    etabPlot(Hb<1e-2)=NaN;
+
     subplot(2,1,1)
-    surf(xb,yb,(etab)','FaceColor','interp','EdgeColor','none');%'EdgeColor','none',
+    sb = surf(xb,yb,bathb','EdgeColor','none','FaceColor','flat');
+    alpha 0.25;
+    hold on
+    surf(xb,yb,(etabPlot)','FaceColor','interp','EdgeColor','none');%'EdgeColor','none',
     camlight;
-    axis([xL xR yL yR 0 max(max(etab))])
+    axis([xL xR yL yR -1 0.5])
     clim([min(min(etab)) max(max(etab))])
     xlabel('x')
     ylabel('y')
+    hold off
+
 %     view([0 90])
     subplot(2,1,2)
-    plot(xb,etab(:,Ny/2))
+    plot(xb,etabPlot(:,Ny/2))
+    hold on
+    plot(xb,bathb(:,Ny/2),'r')
     title(strcat('t=',num2str(t)))
+    hold off
     pause(0.001)
 end
 
