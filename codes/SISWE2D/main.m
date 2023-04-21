@@ -62,11 +62,11 @@ CFL = 0.9;    % Courant-Friedrichs-Levi number <= 1
 % etab = 0.5*(etal + etar) + 0.5*(etar - etal)*erf((sqrt(Xb.^2+Yb.^2) - r0)/0.1);
 % bathb= 0.5*(bl   + br  ) + 0.5*(br   - bl  )*erf((sqrt(Xb.^2+Yb.^2) - r0)/0.1);
 
-% *** test #5:
-dt0 = 0.01;
+% *** test #5: Splash in a paraboloid 
+dt0  = 0.01;
 tend = 10;
 etab = 0.01 + 1.5*exp(-( (Xb-0).^2 + (Yb-0).^2 )/(2*0.4^2));%0.1*Xb';
-bathb = -1 + 0.1*Xb'.^2 + 0.1*Yb'.^2;
+bathb= -1 + 0.1*Xb'.^2 + 0.1*Yb'.^2;
 
 u = zeros(Nx+1,Ny); % x-velocity at the cell faces
 v = zeros(Nx,Ny+1); % y-velocity at the cell faces 
@@ -81,7 +81,7 @@ for n = 1:Nt
     umax = max(max(abs(u)));
     vmax = max(max(abs(v)));
     dt = CFL/( umax/dx + vmax/dy );         % time step restriction of FTCS
-    dt = min(dt0,dt);
+    dt = min(dt0,dt)
     if(t + dt > tend)
         dt = tend - t;
     end
@@ -89,12 +89,14 @@ for n = 1:Nt
         break
     end
 
-    % Explicit subsystem (velocity convection)
-    [u,v] = MomentumConvection(u,v);
-
+    %
     Hb = max(0,etab - bathb); % total water depth in the cell centers
     [Hmx,Hpx,Hmy,Hpy,rhsb,Hx,Hy] = LinearPartCoef(Hb,u,v); 
 
+    % Explicit subsystem (velocity convection)
+    [u,v] = MomentumConvection(u,v);
+    [u,v] = VelocityFilter(u,v,Hb);
+  
     % Newton-type iterations
     kMax = 100;
     for k = 1:kMax
@@ -116,8 +118,13 @@ for n = 1:Nt
     t = t + dt;
     
     %% Postprocessing and plotting
+    epsPlot = 1e-2;
     etabPlot = etab;
-    etabPlot(Hb<1e-2)=NaN;
+    etabPlot(Hb<epsPlot)=NaN;
+    ub = 0.5*(u(1:end-1,:) + u(2:end,:));
+    vb = 0.5*(v(:,1:end-1) + v(:,2:end));
+    uvb = sqrt(ub.^2 + vb.^2);
+    uvb(Hb<epsPlot)=NaN;
 
     subplot(2,1,1)
     sb = surf(xb,yb,bathb','EdgeColor','none','FaceColor','flat');
@@ -125,19 +132,19 @@ for n = 1:Nt
     hold on
     surf(xb,yb,(etabPlot)','FaceColor','interp','EdgeColor','none');%'EdgeColor','none',
     camlight;
-    axis([xL xR yL yR -1 0.5])
+    axis([xL xR yL yR -1 1.5])
     clim([min(min(etab)) max(max(etab))])
     xlabel('x')
     ylabel('y')
     hold off
+    frame(n) = getframe;
 
 %     view([0 90])
     subplot(2,1,2)
-    plot(xb,etabPlot(:,Ny/2))
+    plot(xb,etabPlot(:,Ny/2),'o')
     hold on
     plot(xb,bathb(:,Ny/2),'r')
-    title(strcat('t=',num2str(t)))
+    title(strcat('t = ',num2str(t),',   dt = ',num2str(dt)))
     hold off
     pause(0.001)
 end
-
