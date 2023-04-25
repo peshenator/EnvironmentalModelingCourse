@@ -4,7 +4,7 @@
 % Output: x, la soluzione del sistema 
 % L'utente deve fornire il prodotto A*x in una fuNziona
 % chiamata "matop" 
-function x=CGop2Dpc(b) 
+function [x,res,k]=CGop2Dpc(b) 
 x = b;              % valore di primo tentativo 
 N = numel(b);       % numero di elementi in b 
 tol = 1e-14;        % tolleraNza 

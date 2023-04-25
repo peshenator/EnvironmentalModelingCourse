@@ -1,7 +1,7 @@
 %f BTCS scheme for the 2D Richards equation using the 
 % nested Newton method of Casulli & Zanolli DOI:10.1137/100786320
 clear;
-% close all;
+close all;
 clc
 global alpha thetas thetar n m Ks psic 
 global dx dz dt K Kx Kz Nx Nz di H KL g 
@@ -30,16 +30,17 @@ dx   = (xR-xL)/Nx; % x mesh spacing
 dz   = (zR-zL)/Nz; % y mesh spacing 
 x    = linspace(xL+dx/2,xR-dx/2,Nx); 
 z    = linspace(zL+dz/2,zR-dz/2,Nz); 
-tend = 3e5;   % set the final simulation time 
+tend = 5e3;   % set the final simulation time 
 time = 0;     % initial time 
 % set the initial condition for pressure head
 psi = zeros(Nz+1,Nx);
-psi(1:Nz,1:Nx) = -1;                                    % hydrostatic pressure
+psi(1:Nz,1:Nx) = -0.1;                                  % hydrostatic pressure
 psi(Nz+1,1:Nx) = max(0, -0.5+exp(-0.5*x.^2/200^2) );  % free surface
 
 u    = zeros(1,Nx+1);   % initial velocity of the free surface flow (at the cell faces) 
 bath = zeros(1,Nx);     % bathymetry function (bottom shape)
 
+K  = zeros(Nz+1,Nx);    % hydraulic conductivity at the cell centersin
 Kx = zeros(Nz+1,Nx+1);  % hydraulic conductivity at the cell interfaces in x-direction
 Kz = zeros(Nz+2,Nx);    % hydraulic conductivity at the cell interfaces in z-direction
 H  = zeros(1,Nx+1);     % free surface height at the cell interfaces
@@ -48,7 +49,7 @@ rhs= zeros(Nz+1,Nx);    % right hand side of the mildly nonlinear system
 theta = zeros(Nz+1,Nx);
 f     = zeros(Nz+1,Nx);    % true nonlinear function f(psi)
 fk    = zeros(Nz+1,Nx);    
-
+tic;
 for nit=1:1000000000
     dt = 120;          % BTCS is unconditionally stable %0.45*dx^2/max(kL,kR); % time step restriction 
     if(time+dt>tend) 
@@ -101,11 +102,7 @@ for nit=1:1000000000
     % now we start with the nested Newton method
     tol = 1e-7;   
     % initial guess
-    for i=1:Nx
-        for k=1:Nz
-            psi(k,i) = min(psi(k,i),psic);
-        end
-    end
+    psi(1:Nz,1:Nx) = min(psi(1:Nz,1:Nx),psic);
     for iNewton=1:100 % outer Newton iterations
         % The task of the outer iterations is ONLY to 
         % linearize one of the two nonlinear functions q1 or q2 
@@ -146,20 +143,14 @@ for nit=1:1000000000
             if(inres<tol)
                 break
             end
-            dpsi = CGop2Dpc(fk);   % inner Newton step
+            [dpsi,CGres,CGk] = CGop2Dpc(fk);   % inner Newton step
             psi = psi - dpsi;      % update temperature at the inner iteration 
         end
     end 
     % now update the horizontal velocities
-    for i=1:Nx+1
-        if(i==1)
-            u(i)=0;
-        elseif(i==Nx+1)
-            u(i)=0;
-        else
-            u(i) = (Fu(i) - g*dt/dx*(psi(Nz+1,i)-psi(Nz+1,i-1)))/( 1+dt*gamma/H(i) );
-        end
-    end
+    u(2:Nx) = (Fu(2:Nx) - g*dt/dx*(psi(Nz+1,2:Nx)-psi(Nz+1,1:Nx-1)))./( 1+dt*gamma./H(2:Nx) );
+
     time = time + dt; % advance time
     masserror = thetasum - sum(sum(theta))*dx*dz 
 end
+toc
