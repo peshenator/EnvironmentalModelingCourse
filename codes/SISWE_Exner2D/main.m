@@ -7,8 +7,8 @@ global g gamma Nx Ny dx dy dt;
 global sA sm sUc sphi;
 
 %  physical parameters
-xL =-5; xR = 5; 
-yL =-5; yR = 5;
+xL =-5;     xR = 5; 
+yL =-2.5;   yR = 2.5;
 g = 9.81;       % acceleration due to gravity
 gamma = 0.0;   % bottom friction coefficient
 
@@ -18,15 +18,15 @@ sUc  = 0.3;  % critical velocity below which sediment does not move
 sphi = 0.05; % porosity of the sediment
 
 % method parameters
-Nx = 64;
-Ny = Nx;
+Nx = 128;
+Ny = 64;
 dx = (xR-xL)/Nx;
 dy = (yR-yL)/Ny;
 
 x  = linspace(xL,xR,Nx+1); % face x-coordinates of the cells
 y  = linspace(yL,yR,Ny+1); % face y-coordinates of the cells
 xb = 0.5*(x(2:end) + x(1:end-1)); % cell bary-centers in x 
-yb = 0.5*(x(2:end) + y(1:end-1)); % cell bary-centers in y
+yb = 0.5*(y(2:end) + y(1:end-1)); % cell bary-centers in y
 
 % time parameters
 t   = 0;
@@ -38,20 +38,22 @@ CFL = 0.5;    % Courant-Friedrichs-Levi number <= 1
 [X ,Y ] = meshgrid(x ,y );
 dt0  = 0.1;
 tend = 100;
-etab = 1*ones(Nx,Ny) + 0*exp(-0.5*( (Xb-0).^2 + (Yb-0).^2 )/0.9^2);
-bathb= 0.4*exp(-0.5*( (Xb-0).^2 + (Yb-0).^2 )/0.9^2);
+etab = 1*ones(Nx,Ny) + 0*exp(-0.5*( (Xb'-0).^2 + (Yb'-0).^2 )/0.9^2);
+bathb= 0.4*exp(-0.5*( (Xb'+2.5).^2 + (Yb'-1).^2 )/0.5^2) + ...
+       0.4*exp(-0.5*( (Xb'-2.5).^2 + (Yb'+1).^2 )/0.5^2);
 b0 = bathb;
 Hb = max(0,etab - bathb); % total water depth in the cell centers
 u = 1.0*ones(Nx+1,Ny); % y-velocity at the cell faces 
 v = zeros(Nx,Ny+1); % y-velocity at the cell faces 
 
 % plot initial conditions
-subplot(2,1,1)
-surf(xb,yb,(etab)','FaceColor','interp','EdgeColor','none');%'EdgeColor','none',
+subplot(2,2,1)
+surf(xb,yb,etab','FaceColor','interp','EdgeColor','none');%'EdgeColor','none',
 alpha 0.25;
 hold on
 sb = surf(xb,yb,bathb','EdgeColor','none','FaceColor','flat');
 camlight;
+view([1 35])
 axis([xL xR yL yR -1 1.5])
 xlabel('x')
 ylabel('y')
@@ -118,6 +120,7 @@ for n = 1:Nt
     hold on
     surf(xb,yb,bathb','EdgeColor','none','FaceColor','flat');
     camlight;
+    view([1 35])
     axis([xL xR yL yR -0.05 1.1])
     clim([min(min(etab))-1e-3 max(max(etab))+1e-3])
     xlabel('x')
