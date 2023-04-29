@@ -1,3 +1,4 @@
+% this file was taken from here: https://www.mathworks.com/matlabcentral/fileexchange/48734-riemannexact-p1-rho1-u1-p4-rho4-u4-tol
 function [RHO,U,P] = RiemannExact(p1,rho1,u1,p4,rho4,u4,t,x0,xf,npoints,tol)
 
 %This code gives the exact solution of Riemann's 1-D problem in the context
