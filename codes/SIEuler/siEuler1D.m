@@ -11,7 +11,7 @@ rho0 = 1;
 [rhoL, uL, pL, rhoR, uR, pR, xL, xR, tend] = RPinit(2);
 
 % discretization parameters
-Nx = 1024;
+Nx = 512;
 dx = (xR - xL)/Nx;
 xb = linspace(xL+dx/2,xR-dx/2,Nx  ); % cell- centers
 x  = linspace(xL,xR,Nx+1); % cell edges
@@ -39,7 +39,7 @@ QR = [rhoR rhoR*uR qx(3,Nx+1)]';
 
 time = 0;
 plotcall = 0;
-auxpar = struct('res',0,'linecolor','#77AC30');
+auxpar = struct('res',0,'linecolor','#4DBEEE');
 myplot(time,xb,x,qx(1,:),qx(2,:)./qx(1,:),pb,qb(3,:),auxpar);
 
 for n=1:10000000
@@ -64,8 +64,9 @@ for n=1:10000000
 
     %% STEP #1 
     % explicit (convective sub-system, notation F(q) adapted from DOI:10.1016/j.amc.2015.08.042)
-    Fqb = Convect_qb(qb,qx,dt,dx);   % convect all quantities at the cell-centeres
-    
+%     Fqb = Convect_qb(qb,qx,dt,dx);   % convect all quantities at the cell-centeres
+    Fqb = Convect_Qb_MUSCL(qb,qx,dt,dx);   % convect all quantities at the cell-centeres
+
     Fqx(:,2:Nx ) = 0.5*(Fqb(:,2:Nx) + Fqb(:,1:Nx-1));
     Fqx(:,1   ) = QL; Fqx(:,Nx+1) = QR;
     %% STEP #2 
@@ -80,7 +81,6 @@ for n=1:10000000
     
     %% Plot
     pb = pressure(qb(1,:),qb(2,:)./qb(1,:),qb(3,:));
-    auxpar = struct('res',residual,'linecolor','#77AC30');
 
     subplot(1,3,1)
     plot(x,qx(1,:),'-','Color',auxpar.linecolor)
