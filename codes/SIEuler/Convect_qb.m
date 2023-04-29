@@ -1,5 +1,5 @@
 % Advect the cell-centerd quantities (only explicit part)
-function qbnew = Convect_qb(qb,qx,dt,dx)
+function [qbnew,qxnew] = Convect_qb(qb,qx,dt,dx)
     global Nx QL QR;
     
     nVar = (size(qx,1));
@@ -19,5 +19,11 @@ function qbnew = Convect_qb(qb,qx,dt,dx)
     end
 
     qbnew = qb - dtdx*( fx(:,2:Nx+1) - fx(:,1:Nx) );
+
+    % avarage to the x-faces:
+    qxnew = zeros(nVar,Nx+1);
+    qxnew(:,1   ) = QL;
+    qxnew(:,2:Nx) = 0.5*(qbnew(:,2:Nx) + qbnew(:,1:Nx-1));
+    qxnew(:,Nx+1) = QR;
 
     end

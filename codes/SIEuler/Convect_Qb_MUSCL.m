@@ -1,5 +1,5 @@
 % Advect the cell-centerd quantities (only explicit part)
-function Qbnew = Convect_Qb_MUSCL(Qb,Qx,dt,dx)
+function [Qbnew,Qxnew] = Convect_Qb_MUSCL(Qb,Qx,dt,dx)
     global Nx QL QR;
     
     nVar = (size(Qx,1));
@@ -37,6 +37,12 @@ function Qbnew = Convect_Qb_MUSCL(Qb,Qx,dt,dx)
     end
 
     Qbnew = Qb - dtdx*( fpx - fmx );
+    
+    % avarage to the x-faces:
+    Qxnew = zeros(nVar,Nx+1);
+    Qxnew(:,1   ) = QL;
+    Qxnew(:,2:Nx) = 0.5*(Qbnew(:,2:Nx) + Qbnew(:,1:Nx-1));
+    Qxnew(:,Nx+1) = QR;
 
 
     end

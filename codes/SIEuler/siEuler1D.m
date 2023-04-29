@@ -8,17 +8,17 @@ cv = 1;
 gam = 1.4;
 rho0 = 1;
 
-[rhoL, uL, pL, rhoR, uR, pR, xL, xR, tend] = RPinit(2);
+[rhoL, uL, pL, rhoR, uR, pR, xL, xR, tend] = RPinit(1);
 
 % discretization parameters
-Nx = 512;
+Nx = 1024;
 dx = (xR - xL)/Nx;
 xb = linspace(xL+dx/2,xR-dx/2,Nx  ); % cell- centers
 x  = linspace(xL,xR,Nx+1); % cell edges
 CFL = 0.95;
 
-MaxPicardP = 10;
-tolPicard  = 1e-5;
+MaxPicardP = 50;
+tolPicard  = 1e-10;
 
 %% Initial data and BC: 
 
@@ -64,19 +64,12 @@ for n=1:10000000
 
     %% STEP #1 
     % explicit (convective sub-system, notation F(q) adapted from DOI:10.1016/j.amc.2015.08.042)
-%     Fqb = Convect_qb(qb,qx,dt,dx);   % convect all quantities at the cell-centeres
-    Fqb = Convect_Qb_MUSCL(qb,qx,dt,dx);   % convect all quantities at the cell-centeres
-
-    Fqx(:,2:Nx ) = 0.5*(Fqb(:,2:Nx) + Fqb(:,1:Nx-1));
-    Fqx(:,1   ) = QL; Fqx(:,Nx+1) = QR;
+    % [Fqb,Fqx] = Convect_qb(qb,qx,dt,dx);   % convect all quantities at the cell-centeres
+    [Fqb,Fqx] = Convect_Qb_MUSCL(qb,qx,dt,dx);   % convect all quantities at the cell-centeres
     %% STEP #2 
     % implicit (pressure sub-system)
-    [qb(3,:),qx(2,:),residual,iter] = PressureSubSysCG(Fqx,Fqb,dt,dx);
-    
-    %
-    qx(1,:) = Fqx(1,:); % density is updated only explicitly
-    qb(1:2,:) = 0.5*( qx(1:2,2:Nx+1) + qx(1:2,1:Nx) );
- 
+    [qb,qx,residual,iter] = PressureSubSysCG(Fqb,Fqx,dt,dx);
+     
     time = time + dt;
     
     %% Plot

@@ -1,11 +1,14 @@
-% Here, we solve the pressure subsystem with the CG method (see the paper DOI: 10.1016/j.amc.2015.08.042)
-function [rhoEb,mx,res,iPicard] = PressureSubSysCG(qx,qb,dt,dx)
+% Here, we solve the pressure subsystem with the CG method (see the paper DOI: 10.1016/j.jcp.2017.03.038)
+function [qbnew,qxnew,res,iPicard] = PressureSubSysCG(qb,qx,dt,dx)
 global Nx pL pR QL QR gam MaxPicardP tolPicard;
 
 res = 1;
 
 hx = zeros(1,Nx+1); % enthalpy at the x-interfaces
 px = zeros(1,Nx+1); % pressure at the x-interfaces
+
+qbnew = qb;
+qxnew = qx;
 
 rhox = qx(1,:);
 mx   = qx(2,:);
@@ -34,11 +37,6 @@ for iPicard=1:MaxPicardP
     hx(2:Nx) = px(2:Nx)./((gam-1)*rhox(2:Nx)) + px(2:Nx)./rhox(2:Nx);
     hx(Nx+1) = pR/((gam-1)*QR(1)) + pR/QR(1);
     %
-
-    %% diagonals (a - lower, b - main, c - upper):
-    a =-dtdx2*hx(1:Nx);     
-    b = 1/(gam-1) + dtdx2*( hx(2:Nx+1) + hx(1:Nx) );
-    c =-dtdx2*hx(2:Nx+1);
     
     %% rhs:
     % kinetic energy:
@@ -58,8 +56,14 @@ for iPicard=1:MaxPicardP
     mx(Nx+1) = QR(2);
 
 end
+% update face quantities (we don't care about qx(3,:)):
+qxnew(2,:) = mx;
+
+% update barycenter quantities:
+qbnew(1:2,:) = 0.5*(qxnew(1:2,2:Nx+1) + qxnew(1:2,1:Nx));
 % update rhoEb**:
-rhoEb = rhoEb - dtdx*( hx(2:Nx+1).*mx(2:Nx+1) - hx(1:Nx).*mx(1:Nx) );
+qbnew(3,:) = rhoEb - dtdx*( hx(2:Nx+1).*mx(2:Nx+1) - hx(1:Nx).*mx(1:Nx) );
+
 
 if (res > tolPicard)
     disp(strcat('Pressure system does NOT converge, res = ',num2str(res)))
