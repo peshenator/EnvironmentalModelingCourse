@@ -97,17 +97,17 @@ elseif( nRP == 7 )
     xL =-0.5;
     xR = 0.5;
     tend = 0.2;
-elseif( nRP == 8 )
-    rhoL = 1;       % density left
-    uL   = 0.1;     % u left
-    pL   = 0.1;       % pressure left
-
-    rhoR = 1;       % density right
-    uR   =-0.1;     % u right
-    pR   = 0.1;       % pressure right
-    
-    xL =-0.5;
-    xR = 0.5;
-    tend = 0.4;
+% elseif( nRP == 8 )
+%     rhoL = 1;       % density left
+%     uL   = 0.1;     % u left
+%     pL   = 0.1;       % pressure left
+% 
+%     rhoR = 1;       % density right
+%     uR   =-0.1;     % u right
+%     pR   = 0.1;       % pressure right
+%     
+%     xL =-0.5;
+%     xR = 0.5;
+%     tend = 0.4;
 end
 end

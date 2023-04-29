@@ -1,5 +1,5 @@
 % Matrix-free conjugate gradient for A*x = b
-function [x,k,err] = CGSolver(rhs,hx,dt,dx)
+function [x,err,k] = CGSolver(rhs,hx,dt,dx)
 
 tol = 1e-14;
 
