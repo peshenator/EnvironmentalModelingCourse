@@ -32,7 +32,7 @@ function T = TCasulliZanolli(T)
                 break
             end
             % dT = Thomas(a,b+dQ12,c,ResInner);
-            [dT,CGiter,CGerr] = CG_T(ResInner,Kmx,Kpx,Kmy,Kpy,dQ12);
+            [dT,CGiter,CGerr] = CGsolver_T(ResInner,@MatVecProd_T,Kmx,Kpx,Kmy,Kpy,dQ12);
             T0 = T0 - dT;
         end
     end

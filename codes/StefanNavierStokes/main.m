@@ -111,19 +111,21 @@ for n=1:nmax
 
     % STEP #3 Implicit:
     Tc = bary2corners(T,Tlake,Tlake,Tlake,Tair);
-    [ustar,erru,ku] = CG_u_vel(rhsustar,T,Tc);
-    [vstar,errv,kv] = CG_v_vel(rhsvstar,T,Tc);
+    [ustar,erru,ku] = CGsolver(rhsustar,@MatVecProd_u,T,Tc);
+    [vstar,errv,kv] = CGsolver(rhsvstar,@MatVecProd_v,T,Tc);
 
     % compute the right hand-side for the Poisson equation
     rhs = (ustar(2:Nx+1,:) - ustar(1:Nx,:))/(dt*dx) + ...
           (vstar(:,2:Ny+1) - vstar(:,1:Ny))/(dt*dy);
-    [pprime,errp,kp] = ConjGradOpt_p(rhs);  % use the matrix free Conjugate Gradient method to solve the pressure Poisson equation
- 
-    % STEP #4 Div-free velocity correction
-    [u,v] = DivFreeVelocityCorrection(u,v,ustar,vstar,pprime);
+    % [pprime,errp,kp] = ConjGradOpt_p(rhs);  
+    % use the matrix free Conjugate Gradient method to solve the pressure Poisson equation
+    [pprime,errp,kp] = CGsolver(rhs,@MatVecProd_p,T,Tc);
+
+    % STEP #4 Div-free velocity correction (add grad(Pprime) to the velocity)
+    [u,v] = AddGradP(u,v,ustar,vstar,pprime);
     divuv = (u(2:Nx+1,:) - u(1:Nx,:))/dx + (v(:,2:Ny+1) - v(:,1:Ny))/dy;
 
-    % update pressure adding the correction
+    % update pressure adding the correction P^{n+1} = P* + P' :
     p = pstar + pprime;
 
     % Temperature convection-diffusion
