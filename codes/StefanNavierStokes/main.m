@@ -106,7 +106,8 @@ for n=1:nmax
     % compute the nonlinear convective and diffusive terms
     [rhsustar,rhsvstar] = MomentumConvectionDiffusion(u,v,T);
     % add the grad(pstar) to the velocity
-    [rhsustar,rhsvstar] = MomentumPressureGrad(rhsustar,rhsvstar,pstar);
+    [rhsustar,rhsvstar] = AddGradP(rhsustar,rhsvstar,rhsustar,rhsvstar,pstar);
+
 
     % STEP #3 Implicit:
     Tc = bary2corners(T,Tlake,Tlake,Tlake,Tair);
@@ -164,7 +165,7 @@ for n=1:nmax
     axis square;
     colorbar;
 
-    pause(0.005)
+    pause(0.01)
     
 end
 
