@@ -4,7 +4,7 @@ clear;
 % Casulli and Zanolli
 global kappaS kappaL hs cS cL rhoL rhoS KS KL Tair Tlake Ts epsilon Nx Ny dt dx dy
 % regularization parameter for the internal energy Q(T)
-epsilon = 0.1;
+epsilon = 0.05;
 % physical parameters of water and ice [in SI units]
 KS = 2.09;     % heat conductivity of the solid phase (ice)
 KL = 0.6;      % ... of the liquid phase (water)
@@ -15,26 +15,26 @@ cS   = 2108;        % heat capacity of the solid
 cL   = 4187;        % heat capacity of the liquid
 kappaS   = KS/(rhoS*cS);
 kappaL   = KL/(rhoL*cL);
-Tc   = 0;           % critical temperature of the phase change
+Tc   =-0.1;           % critical temperature of the phase change
 Ts   = Tc;
 Tair = -10;         % top (air) temperature
-Tlake   = +4;       % initial temperature of the lake
+Tlake   = 4;       % initial temperature of the lake
 day  = 24*3600;     % day in SI units
 
 % domain
 xL = 0;             % left boundary
-xR = 2;             % right boundary
+xR = 1;             % right boundary
 yB = 0;             % bottom boundary (bottom of the lake)
-yT = 2;             % top boundary (free surface)
+yT = 1;             % top boundary (free surface)
 
-tend = 40*day; %20*day;       % final time
+tend = 3*day; %20*day;       % final time
 % discretization parameters
 Nx = 64;         % number of control volumes
 Ny = Nx;         % number of control volumes
 dx = (xR-xL)/Nx;  % mesh spacing in x
 dy = (yT-yB)/Ny;  % mesh spacing in y
 
-d  = 40;          % stability parameter for FTCS d = k/(dx^2/dt + dy^2/dt) < 0.5, or 0.25 in 2D ?
+d  = 100;          % stability parameter for FTCS d = k/(dx^2/dt + dy^2/dt) < 0.5, or 0.25 in 2D ?
 % mesh & initial condition
 T = zeros(Nx,Ny);
 T(:,:) = Tlake;
@@ -82,7 +82,7 @@ for n=1:nmax
                 break
             end
             % dT = Thomas(a,b+dQ12,c,ResInner);
-            [dT,CGiter,CGerr] = CG_T(ResInner,Kmx,Kpx,Kmy,Kpy,dQ12);
+            [dT,CGiter,CGerr] = CGsolver(ResInner,@MatVecProd_T,Kmx,Kpx,Kmy,Kpy,dQ12);
             T0 = T0 - dT;
         end
     end
@@ -98,9 +98,10 @@ for n=1:nmax
 end
 hold on % add the exact solution to the existing plot 
 % 
-gamma = Newton(1)   % compute the constant gamma
+gamma = Newton(1);   % compute the constant gamma
 % plot the exact solution at a given time
 EMAX = 1000;                % number of points to visualize the exact solution
+Te = zeros(1,EMAX);         % exact solution
 xe = linspace(xL,xR,EMAX);  % set of points where to visualize the exact solution
 s = 2*gamma*sqrt(kappaS*time);  % location of the solid-liquid interface
 G1 = (Tc-Tair)/erf(gamma);    % temporary constants
