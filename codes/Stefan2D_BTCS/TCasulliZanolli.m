@@ -12,7 +12,7 @@ function T = TCasulliZanolli(T)
     T0 = T;
     
     %%  Newsted Newton method of Casulli & Zanolli
-    tol = 1e-12*rhoL*hs;
+    tol = 1e-12*rhoL*hL;
     T0 = min(T0,Ts-epsilon); % Initial guess for the outer iterations, see the paper by Casulli & Zanolli
     MaxNewton = 100;
     % ----- OUTER iterations -------

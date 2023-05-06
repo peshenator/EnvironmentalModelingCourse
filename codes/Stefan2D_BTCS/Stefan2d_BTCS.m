@@ -2,13 +2,13 @@ close;
 clear;
 % BTCS scheme for the Stefan problem based on the nested Newton method of
 % Casulli and Zanolli
-global kappaS kappaL hs cS cL rhoL rhoS KS KL Tair Tlake Ts epsilon Nx Ny dt dx dy
+global kappaS kappaL hL cS cL rhoL rhoS KS KL Tair Tlake Ts epsilon Nx Ny dt dx dy
 % regularization parameter for the internal energy Q(T)
 epsilon = 0.05;
 % physical parameters of water and ice [in SI units]
 KS = 2.09;     % heat conductivity of the solid phase (ice)
 KL = 0.6;      % ... of the liquid phase (water)
-hs = 334e3;         % specific latent heat
+hL = 334e3;         % specific latent heat
 rhoS = 917;         % density of the solid
 rhoL = 1000;        % density of the liquid
 cS   = 2108;        % heat capacity of the solid
@@ -61,7 +61,7 @@ for n=1:nmax
     [Kmx,Kpx,Kmy,Kpy,rhs] = LinearPartCoeff(T);
     T0 = T;
 %%  Newsted Newton method of Casulli & Zanolli
-    tol = 1e-12*rhoL*hs;
+    tol = 1e-12*rhoL*hL;
     T0 = min(T0,Ts-epsilon); % Initial guess for the outer iterations, see the paper by Casulli & Zanolli
     MaxNewton = 100;
     % ----- OUTER iterations -------
