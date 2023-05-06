@@ -2,17 +2,17 @@
 % epsilon is a regularizatio parameter
 function q = Q(T)
 
-global hL cS cL rhoS rhoL Ts epsilon;
+global hL cS cL rhoS rhoL Tc epsilon;
 
-b = T <= Ts - epsilon; % boolean variable
-q = b.*( rhoS*cS*(T-Ts) );
+b = T <= Tc - epsilon; % boolean variable
+q = b.*( rhoS*cS*(T-Tc) );
 
-b = T >= Ts + epsilon;
-q =q + b.*( rhoL*cL*(T-Ts) + rhoL*hL );
+b = T >= Tc + epsilon;
+q =q + b.*( rhoL*cL*(T-Tc) + rhoL*hL );
 
-b = (T > Ts - epsilon) .*  (T < Ts + epsilon);
-dqdT = (rhoL*cL*((Ts+epsilon) - Ts) + rhoL*hL - rhoS*cS*((Ts-epsilon)-Ts))/(2*epsilon);
-q = q + b.*( rhoS*cS*((Ts-epsilon)-Ts) + dqdT*(T - (Ts - epsilon)) );
+b = (T > Tc - epsilon) .*  (T < Tc + epsilon);
+dqdT = (rhoL*cL*((Tc+epsilon) - Tc) + rhoL*hL - rhoS*cS*((Tc-epsilon)-Tc))/(2*epsilon);
+q = q + b.*( rhoS*cS*((Tc-epsilon)-Tc) + dqdT*(T - (Tc - epsilon)) );
 
 
 end

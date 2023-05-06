@@ -2,9 +2,9 @@ close;
 clear;
 % BTCS scheme for the Stefan problem based on the nested Newton method of
 % Casulli and Zanolli
-global kappaS kappaL hL cS cL rhoL rhoS KS KL Tair Tlake Ts epsilon Nx Ny dt dx dy
+global kappaS kappaL hL cS cL rhoL rhoS KS KL Tair Tlake Tc epsilon Nx Ny dt dx dy
 % regularization parameter for the internal energy Q(T)
-epsilon = 0.05;
+epsilon = 0.5;
 % physical parameters of water and ice [in SI units]
 KS = 2.09;     % heat conductivity of the solid phase (ice)
 KL = 0.6;      % ... of the liquid phase (water)
@@ -16,7 +16,7 @@ cL   = 4187;        % heat capacity of the liquid
 kappaS   = KS/(rhoS*cS);
 kappaL   = KL/(rhoL*cL);
 Tc   =-0.1;           % critical temperature of the phase change
-Ts   = Tc;
+Tc   = Tc;
 Tair = -10;         % top (air) temperature
 Tlake   = 4;       % initial temperature of the lake
 day  = 24*3600;     % day in SI units
@@ -34,7 +34,7 @@ Ny = Nx;         % number of control volumes
 dx = (xR-xL)/Nx;  % mesh spacing in x
 dy = (yT-yB)/Ny;  % mesh spacing in y
 
-d  = 100;          % stability parameter for FTCS d = k/(dx^2/dt + dy^2/dt) < 0.5, or 0.25 in 2D ?
+d  = 75;          % stability parameter for FTCS d = k/(dx^2/dt + dy^2/dt) < 0.5, or 0.25 in 2D ?
 % mesh & initial condition
 T = zeros(Nx,Ny);
 T(:,:) = Tlake;
@@ -62,7 +62,7 @@ for n=1:nmax
     T0 = T;
 %%  Newsted Newton method of Casulli & Zanolli
     tol = 1e-12*rhoL*hL;
-    T0 = min(T0,Ts-epsilon); % Initial guess for the outer iterations, see the paper by Casulli & Zanolli
+    T0 = min(T0,Tc-epsilon); % Initial guess for the outer iterations, see the paper by Casulli & Zanolli
     MaxNewton = 100;
     % ----- OUTER iterations -------
     for iouter = 1:MaxNewton
@@ -73,7 +73,7 @@ for n=1:nmax
         end
         Talpha = T0; % we store the value of the temperature so that from now on the meaning of T0 is T^(alpha,beta)
         % ----- INNER iterations ------
-        T0 = max(T0,Ts-epsilon);   % Initial guess for the inner iterations, see the paper by Casulli & Zanolli
+        T0 = max(T0,Tc-epsilon);   % Initial guess for the inner iterations, see the paper by Casulli & Zanolli
         for iinner = 1:MaxNewton
             [ResInner,dQ12] = ResidualInner(T0,Talpha,Kmx,Kpx,Kmy,Kpy,rhs);    % Compute the residual of the inner iterations and the Jacobian of Q=Q1-Q2
             ResInner_norm = norm(ResInner);
@@ -118,7 +118,7 @@ fig2 = figure;
 plot(xe(end:-1:1),Te)
 hold on
 plot(y,T(Nx/2,:),'o-')
-% plot(s,Ts,'o','MarkerFaceColor',[1 0 0])
+% plot(s,Tc,'o','MarkerFaceColor',[1 0 0])
 legend('BTCS','exact')
 hold off
 
