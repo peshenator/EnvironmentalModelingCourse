@@ -1,11 +1,13 @@
-function T = TConvection(u,v,T)
+function T = TConvectionDiffusion(u,v,T,xb)
 
-    global Nx Ny dx dy dt
+    global Nx Ny dx dy dt TBC
 
     fm = zeros(Nx,Ny);
     fp = zeros(Nx,Ny);
     gm = zeros(Nx,Ny);
     gp = zeros(Nx,Ny);
+
+    Tbottom = (TBC*exp(-0.5*(xb-0.5).^2/0.1^2))';
 
     % x direction
     fm(1     ,:) = 0;   
@@ -15,6 +17,7 @@ function T = TConvection(u,v,T)
 
     % y direction
     gm(:,1     ) = 0;
+    %gm(:,1     ) =-lambda*(T(:,1) - Tbottom)/(dy/2);
     gm(:,2:Ny  ) = 0.5*v(:,2:Ny).*( T(:,2:Ny) + T(:,1:Ny-1) ) - 0.5*abs(v(:,2:Ny)).*( T(:,2:Ny) - T(:,1:Ny-1) );
     gp(:,1:Ny-1) = gm(:,2:Ny  );
     gp(:,Ny    ) = 0;

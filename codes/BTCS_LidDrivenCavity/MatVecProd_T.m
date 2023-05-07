@@ -2,39 +2,24 @@ function AT = MatVecProd_T(T)
 
 global dt dx dy lambda Nx Ny;
 
-AT = T;
+fm = zeros(Nx,Ny);
+fp = zeros(Nx,Ny);
+gm = zeros(Nx,Ny);
+gp = zeros(Nx,Ny);
 
-% SPACE LOOP
-for i=1:Nx
-    for j=1:Ny
+% x direction fluxes
+fm(1   ,:) = 0;                              % No heat flux (Neumann type BC)
+fm(2:Nx  ,:) =- lambda*(T(2:Nx,:) - T(1:Nx-1,:))/dx;
+fp(1:Nx-1,:) = fm(2:Nx  ,:);
+fp(Nx    ,:) = 0; 
 
-        % the swipe in the x direction
-        if (i == 1)         
-            fp =-lambda*( T(i+1,j) - T(i  ,j) )/dx;     % discrete Fourier law
-            fm = 0;                                     % No heat flux (Neumann type BC)
-        elseif(i == Nx)   
-            fp = 0;                                     % No heat flux (Neumann type BC)
-            fm =-lambda*( T(i  ,j) - T(i-1,j) )/dx;     % discrete Fourier law               
-        else               
-            fp =-lambda*( T(i+1,j) - T(i  ,j) )/dx;     % discrete Fourier law
-            fm =-lambda*( T(i  ,j) - T(i-1,j) )/dx;     % discrete Fourier law
-        end
+% y direction fluxes
+gm(:,1     ) = 0; %0.5*v(:,1   ).*( T(:,1   ) + Tlake       ) - 0.5*abs(v(:,1   )).*( T(:,1   ) - Tlake       );
+gm(:,2:Ny  ) =- lambda*(T(:,2:Ny) - T(:,1:Ny-1));
+gp(:,1:Ny-1) = gm(:,2:Ny  );
+gp(:,Ny    ) = 0;
 
-        % the swipe in y direction
-        if (j == 1)        
-            gp =-lambda*( T(i,j+1) - T(i  ,j) )/dy;    % discrete Fourier law
-            gm = 0;                                    % No heat flux (Neumann type BC) 
-        elseif(j == Ny)   
-            gp = 0;                                    % No heat flux (Neumann type BC)
-            gm =-lambda*( T(i,j) - T(i,j-1) )/dy;      % discrete Fourier law               
-        else                
-            gp =-lambda*( T(i,j+1) - T(i,j  ) )/dy;    % discrete Fourier law
-            gm =-lambda*( T(i,j  ) - T(i,j-1) )/dy;    % discrete Fourier law
-        end
-
-        AT(i,j) = T(i,j) + dt/dx*(fp - fm) + dt/dy*(gp - gm);  % Finite Volume update
-    end
-end
+AT = T + dt/dx*(fp - fm) + dt/dy*(gp - gm);  % Finite Volume update
 
 
 end
