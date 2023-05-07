@@ -2,16 +2,16 @@
 function q1 = Q1(T)
 
 
-global hs cS cL rhoS rhoL Ts epsilonT;
+global hL cS cL rhoS rhoL Tc epsilonT;
 
-b = T <= Ts - epsilonT; % boolean variable
-q1 = b.*( rhoS*cS*(T-Ts) );
+b = T <= Tc - epsilonT; % boolean variable
+q1 = b.*( rhoS*cS*(T-Tc) );
 
 % energy in the regularized tranzition zone
-% Q(T) = Q(T0) + dQdT(T0)*(T - T0), where T0 = Ts-epsilon
-b = T > Ts - epsilonT; % boolean variable
-dqdT = (rhoL*cL*((Ts+epsilonT) - Ts) + rhoL*hs - rhoS*cS*((Ts-epsilonT)-Ts))/(2*epsilonT);
-q1 =q1 + b.*( rhoS*cS*((Ts-epsilonT)-Ts) + dqdT*(T - (Ts - epsilonT)) );
+% Q(T) = Q(T0) + dQdT(T0)*(T - T0), where T0 = Tc-epsilon
+b = T > Tc - epsilonT; % boolean variable
+dqdT = (rhoL*cL*((Tc+epsilonT) - Tc) + rhoL*hL - rhoS*cS*((Tc-epsilonT)-Tc))/(2*epsilonT);
+q1 =q1 + b.*( rhoS*cS*((Tc-epsilonT)-Tc) + dqdT*(T - (Tc - epsilonT)) );
 
 
 end

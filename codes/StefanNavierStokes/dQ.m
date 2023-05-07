@@ -1,17 +1,17 @@
 % Jacobian dQ/dT of Q(T)=Q1 - Q2
 function jac = dQ(T)
 
-global hs cS cL rhoS rhoL Ts epsilonT
+global hL cS cL rhoS rhoL Tc epsilonT
 
 % ice
-b = T <= Ts-epsilonT;
+b = T <= Tc-epsilonT;
 jac = b.* (rhoS*cS);
 % water
-b = T >= Ts+epsilonT;
+b = T >= Tc+epsilonT;
 jac = jac + b.* (rhoL*cL);
 % transition regiion
-b = (T > Ts - epsilonT) .*  (T < Ts + epsilonT);
-dqdT = (rhoL*cL*((Ts+epsilonT) - Ts) + rhoL*hs - rhoS*cS*((Ts-epsilonT)-Ts))/(2*epsilonT);
+b = (T > Tc - epsilonT) .*  (T < Tc + epsilonT);
+dqdT = (rhoL*cL*((Tc+epsilonT) - Tc) + rhoL*hL - rhoS*cS*((Tc-epsilonT)-Tc))/(2*epsilonT);
 jac = jac + b.*dqdT;
 
 end
