@@ -26,7 +26,7 @@ tend = 3*day;
 Nx = 100;
 dx = (xR - xL)/Nx;
 x = linspace(xL+dx/2,xR-dx/2,Nx);
-d = 0.49;       % d = K*dt/dx^2 < 0.5
+d = 0.4;       % d = K*dt/dx^2 < 0.5
 
 % Initial conditions
 T = TL*ones(1,Nx);
