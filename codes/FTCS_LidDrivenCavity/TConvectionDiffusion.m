@@ -1,4 +1,4 @@
-function T = TConvection(u,v,T,xb)
+function T = TConvectionDiffusion(u,v,T,xb)
 
     global Nx Ny dx dy dt lambda TBC
 

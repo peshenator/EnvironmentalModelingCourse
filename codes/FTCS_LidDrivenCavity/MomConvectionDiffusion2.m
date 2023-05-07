@@ -1,5 +1,5 @@
 % update ustar,vstar with the convection and diffusion terms
-function [ustar,vstar] = MomentumConvectionDiffusion(un,vn,u,v,T)
+function [ustar,vstar] = MomConvectionDiffusion2(un,vn,u,v,T)
 global Nx Ny dt dx dy nu uLid beta g T0;
 
 ustar = un;

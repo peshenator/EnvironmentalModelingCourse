@@ -1,6 +1,6 @@
 % Result of the matrix-vector product for the Poisson equation
 
-function Ap=MatVectProdP(p)
+function Ap=MatVecProd_p(p)
 global Nx Ny dx dy
 
 Ap = zeros(size(p));

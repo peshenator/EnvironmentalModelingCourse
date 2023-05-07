@@ -1,6 +1,6 @@
 % implement the nonlnear advection and diffusion + buoyncy force (Bousinesque approximation)
 
-function [ustar,vstar] = MomentumConvectionDiffusion(u,v,T)
+function [ustar,vstar] = MomConvectionDiffusion(u,v,T)
 global Nx Ny dt dx dy nu uLid beta T0 uWall vWall g;
 
 ustar = u;

@@ -1,20 +1,20 @@
 % SIMPLE algorithm for the incompressible Navier-Stokes equations
 %  - advection is explicit (MUSCL scheme) 
-%  - viscous terms are implicit  (BTCS scheme)
-%  - heat conduction is implicit (BTCS scheme)
+%  - viscous terms are explicit  (FTCS scheme)
+%  - heat conduction is explicit (FTCS scheme)
 % We solve the momentum and the internal energy equation
 % The Boussinesq approximation is used for buyoncy forces
 
 clear;
-close all;
+% close all;
 % clc;
 
-global Nx Ny dx dy dt nu  uLid g beta T0 lambda uWall vWall vLid TBC xc yc;
+global Nx Ny dx dy dt nu  uLid g beta T0 lambda uWall vWall vLid TBC xb yc;
 
 % physical parameters
-nu = 1e-2;      % kinematic viscosity
-uLid =  0;       % u velocity of the lid (top boundary)
-vLid =  0;       % v velocity of the lid (top boundary)
+nu    = 1e-2;   % kinematic viscosity
+uLid  =-1;      % u velocity of the lid (top boundary)
+vLid  = 0;      % v velocity of the lid (top boundary)
 uWall = 0;      % u velocity at the walls
 vWall = 0;      % v velocity at the walls
 g = 9.81;       % accelaration due to gravity
@@ -25,7 +25,7 @@ beta = 1;       % thermal expansion coefficient = drho/dT
 
 % computational parameters
 time = 0;
-tend = 10;
+tend = 1;
 
 xL = 0;
 xR = 1;
@@ -36,7 +36,7 @@ Ny = 50;
 dx = (xR - xL)/Nx;
 dy = (yR - yL)/Ny;
 
-xc = linspace(xL+dx/2,xR-dx/2,Nx);    % x coordinates of the cell-centers
+xb = linspace(xL+dx/2,xR-dx/2,Nx);    % x coordinates of the cell-centers
 yc = linspace(yL+dy/2,yR-dy/2,Ny);    % y coordinates of the cell-centers
 x = linspace(xL,xR,Nx+1);             % x coordinates of the cell-edges
 y = linspace(yL,yR,Ny+1);             % y coordinates of the cell-edges
@@ -52,8 +52,8 @@ rhs =zeros(Nx,Ny);                  % right hand-side for the pressure Poisson e
 
 for i = 1:Nx
     for j = 1:Ny
-       T(i,j) = T0+exp(-0.5*( (xc(i) - 0.2 )^2 + (yc(j) - 0.3)^2)/0.1^2 ); %cold bubble
-%        T(i,j) = T0+exp(-0.5*( (xc(i) - 0.2 )^2 + (yc(j) - 0.25)^2)/0.1^2 ); %hot bubble
+       T(i,j) = T0+exp(-0.5*( (xb(i) - 0.2 )^2 + (yc(j) - 0.3)^2)/0.1^2 ); %cold bubble
+%        T(i,j) = T0+exp(-0.5*( (xb(i) - 0.2 )^2 + (yc(j) - 0.25)^2)/0.1^2 ); %hot bubble
     end
 end
 
@@ -92,19 +92,19 @@ for n=1:nmax
 
     % STEP #2 Explicit:
     % compute the nonlinear convective and diffusive terms
-    [ustar,vstar] = MomentumConvectionDiffusion2(u,v,u,v,T);
+    [ustar,vstar] = MomConvectionDiffusion(u,v,T);
     % add the grad(pstar) to the velocity
     [ustar,vstar] = AddGradP(ustar,vstar,ustar,vstar,pstar);
 
     % compute the right hand-side for the Poisson equation
     rhs = (ustar(2:Nx+1,:) - ustar(1:Nx,:))/(dt*dx) + ...
           (vstar(:,2:Ny+1) - vstar(:,1:Ny))/(dt*dy);
-    [pprime,errp,kp] = CGsolver(rhs,@MatVectProdP);  % use the matrix free Conjugate Gradient method to solve the pressure Poisson equation
+    [pprime,errp,kp] = CGsolver(rhs,@MatVecProd_p);  % use the matrix free Conjugate Gradient method to solve the pressure Poisson equation
  
     % STEP #4 Div-free velocity correction
     [u,v] = AddGradP(u,v,ustar,vstar,pprime);
 
-    T = TConvection(u,v,T,xc);
+    T = TConvectionDiffusion(u,v,T,xb);
 
     % update pressure adding the correction
     p = pstar + pprime;
@@ -119,11 +119,11 @@ for n=1:nmax
     
 %     subplot(1,3,1)
     hold off
-    s = surf(xc,yc,T','EdgeColor','none','FaceColor','interp');%sqrt(uc.^2+vc.^2)'
-%     s = surf(xc(2:Nx-1),yc(2:Ny-1),abs(divuv(2:Nx-1,2:Ny-1))','EdgeColor','none','FaceColor','interp');
+    s = surf(xb,yc,T','EdgeColor','none','FaceColor','interp');%sqrt(uc.^2+vc.^2)'
+%     s = surf(xb(2:Nx-1),yc(2:Ny-1),abs(divuv(2:Nx-1,2:Ny-1))','EdgeColor','none','FaceColor','interp');
     view([0 90]) % position the camera, vision angle
     hold on 
-    quiver(xc,yc,uc',vc','k');
+    quiver(xb,yc,uc',vc','k');
     title(strcat('Current time = ',num2str(time)))
     xlabel('x [m]')
     ylabel('y [m]')
@@ -146,7 +146,7 @@ for n=1:nmax
 %     axis square;
 %     
 %     subplot(1,3,3)
-%     plot(xc,vc(:,Ny/2),'LineWidth',1.5)
+%     plot(xb,vc(:,Ny/2),'LineWidth',1.5)
 %     hold on
 %     plot(vref(:,1),vref(:,2),'LineWidth',1.5)
 %     grid on
@@ -156,7 +156,7 @@ for n=1:nmax
 %     hold off
 %     axis square;
 
-    pause(0.01)
+    pause(0.001)
     
 end
 
@@ -168,7 +168,7 @@ end
 % 
 % Z0 = get(s,'ZData');
 % set(s,'ZData',Z0 - 1.1);
-% stream = streamline(xc,yc,uc',vc',startx,starty,[0.5]);
+% stream = streamline(xb,yc,uc',vc',startx,starty,[0.5]);
 % set(stream,'Color','#EDB120');
 % 
 % % plot 1D cuts:
@@ -183,7 +183,7 @@ end
 % axis square;
 % 
 % subplot(1,3,3);
-% plot(xc,vc(:,Ny/2),'LineWidth',1.5)
+% plot(xb,vc(:,Ny/2),'LineWidth',1.5)
 % hold on
 % plot(vref(:,1),vref(:,2),'LineWidth',1.5)
 % grid on
