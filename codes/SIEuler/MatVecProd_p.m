@@ -1,5 +1,5 @@
 %  matrix-vector product for the pressure subsystem
-function Mp = MatVecProdCG(p,hx,dt,dx)
+function Mp = MatVecProd_p(p,hx,dt,dx)
 global gam Nx;
 
 fm = zeros(1,Nx);

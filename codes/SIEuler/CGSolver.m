@@ -1,11 +1,11 @@
 % Matrix-free conjugate gradient for A*x = b
-function [x,err,k] = CGSolver(rhs,hx,dt,dx)
+function [x,err,k] = CGSolver(rhs,MatVecProd,hx,dt,dx)
 
 tol = 1e-14;
 
 N = numel(rhs);
 x = rhs;                    % initial guess for the solution
-r = rhs - MatVecProdCG(x,hx,dt,dx);    % initial residual
+r = rhs - MatVecProd(x,hx,dt,dx);    % initial residual
 p = r;                      % first vector of the basis of conjugate vectors
 err = sum(sum(r.*r));       % error
 err0 = err;
@@ -14,7 +14,7 @@ for k=1:N
     if (sqrt(err) < tol) % tol*sqrt(err0)
         return
     end
-    Ap = MatVecProdCG(p,hx,dt,dx);
+    Ap = MatVecProd(p,hx,dt,dx);
     alpha = err/sum(sum(p.*Ap));    % coefficients in x = alpha_i*p_i
     x = x + alpha*p;                % next approximation to the solution
     r = r - alpha*Ap;               % update the residual

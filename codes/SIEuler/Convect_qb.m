@@ -12,8 +12,12 @@ function [qbnew,qxnew] = Convect_qb(qb,qx,dt,dx)
     ux = qx(2,:)./qx(1,:);
     fx = zeros(nVar,Nx+1);
 
-    fx(:,1   ) = Fexpl_x(QL);
-    fx(:,Nx+1) = Fexpl_x(QR);
+    % boundary conditions
+    % fx(:,1   ) = Fexpl_x(QL);
+    % fx(:,Nx+1) = Fexpl_x(QR);
+    % use ghost cells at the boundaries:
+    fx(:,1   ) = 0.5*( fb(:,1)     + Fexpl_x(QL) - abs(ux(1   )).*( qx(:,1) - QL  ) );   % left  BC
+    fx(:,Nx+1) = 0.5*( Fexpl_x(QR) + fb(:,Nx)    - abs(ux(Nx+1)).*( QR - qx(:,Nx) ) );   % right BC
     for k = 1:nVar
         fx(k,2:Nx) = 0.5*( fb(k,2:Nx) + fb(k,1:Nx-1) - abs(ux(2:Nx)).*( qb(k,2:Nx) - qb(k,1:Nx-1) ) );
     end
