@@ -9,7 +9,7 @@ clear;
 % close all;
 % clc;
 
-global Nx Ny dx dy dt nu  uLid g beta T0 lambda uWall vWall vLid TBC xb yc;
+global Nx Ny dx dy dt nu  uLid g beta T0 lambda uWall vWall vLid TBC xb yb;
 
 % physical parameters
 nu    = 1e-2;   % kinematic viscosity
@@ -37,7 +37,7 @@ dx = (xR - xL)/Nx;
 dy = (yR - yL)/Ny;
 
 xb = linspace(xL+dx/2,xR-dx/2,Nx);    % x coordinates of the cell-centers
-yc = linspace(yL+dy/2,yR-dy/2,Ny);    % y coordinates of the cell-centers
+yb = linspace(yL+dy/2,yR-dy/2,Ny);    % y coordinates of the cell-centers
 x = linspace(xL,xR,Nx+1);             % x coordinates of the cell-edges
 y = linspace(yL,yR,Ny+1);             % y coordinates of the cell-edges
 CFL = 0.9;                              % CFL number < 1
@@ -52,8 +52,8 @@ rhs =zeros(Nx,Ny);                  % right hand-side for the pressure Poisson e
 
 for i = 1:Nx
     for j = 1:Ny
-       T(i,j) = T0+exp(-0.5*( (xb(i) - 0.2 )^2 + (yc(j) - 0.3)^2)/0.1^2 ); %cold bubble
-%        T(i,j) = T0+exp(-0.5*( (xb(i) - 0.2 )^2 + (yc(j) - 0.25)^2)/0.1^2 ); %hot bubble
+       T(i,j) = T0+exp(-0.5*( (xb(i) - 0.2 )^2 + (yb(j) - 0.3)^2)/0.1^2 ); %cold bubble
+%        T(i,j) = T0+exp(-0.5*( (xb(i) - 0.2 )^2 + (yb(j) - 0.25)^2)/0.1^2 ); %hot bubble
     end
 end
 
@@ -76,7 +76,7 @@ for n=1:nmax
 
     % impose the stability restriction on the time step (advection + diffusion)
     % restriction by convective (advection,umax,vamx) and parabolic part (diffusion,nu)
-    dt = CFL/( umax/dx + vmax/dy + dt_accel*2*nu*(1/dx^2 + 1/dy^2) );
+    dt = CFL/( umax/dx + vmax/dy + dt_accel*2*nu*(1/dx^2 + 1/dy^2) + dt_accel*2*lambda*(1/dx^2 + 1/dy^2) );
 %     if (dt > 0.1)
 %         dt = 0.1;
 %     end
@@ -104,26 +104,27 @@ for n=1:nmax
     % STEP #4 Div-free velocity correction
     [u,v] = AddGradP(u,v,ustar,vstar,pprime);
 
-    T = TConvectionDiffusion(u,v,T,xb);
-
     % update pressure adding the correction
     p = pstar + pprime;
+
+    % temperatre advection diffusion
+    T = TConvectionDiffusion(u,v,T,xb);
 
     % time update
     time = time + dt;
 
-    % velocity at the cell centers (only for the vizualization!)
+    % velocity at the barycenters (only for the vizualization!)
     divuv = (u(2:Nx+1,:) - u(1:Nx,:))/dx + (v(:,2:Ny+1) - v(:,1:Ny))/dy;
-    uc = 0.5*( u(2:Nx+1,:) + u(1:Nx,:) );
-    vc = 0.5*( v(:,2:Ny+1) + v(:,1:Ny) );
+    ub = 0.5*( u(2:Nx+1,:) + u(1:Nx,:) );
+    vb = 0.5*( v(:,2:Ny+1) + v(:,1:Ny) );
     
 %     subplot(1,3,1)
     hold off
-    s = surf(xb,yc,T','EdgeColor','none','FaceColor','interp');%sqrt(uc.^2+vc.^2)'
-%     s = surf(xb(2:Nx-1),yc(2:Ny-1),abs(divuv(2:Nx-1,2:Ny-1))','EdgeColor','none','FaceColor','interp');
+    s = surf(xb,yb,T','EdgeColor','none','FaceColor','interp');%sqrt(ub.^2+vb.^2)'
+%     s = surf(xb(2:Nx-1),yb(2:Ny-1),abs(divuv(2:Nx-1,2:Ny-1))','EdgeColor','none','FaceColor','interp');
     view([0 90]) % position the camera, vision angle
     hold on 
-    quiver(xb,yc,uc',vc','k');
+    quiver(xb,yb,ub',vb','k');
     title(strcat('Current time = ',num2str(time)))
     xlabel('x [m]')
     ylabel('y [m]')
@@ -135,7 +136,7 @@ for n=1:nmax
 
     % plot 1D cuts:
 %     subplot(1,3,2)
-%     plot(uc(Nx/2,:)',yc,'LineWidth',1.5)
+%     plot(ub(Nx/2,:)',yb,'LineWidth',1.5)
 %     hold on
 %     plot(uref(:,2),uref(:,1),'LineWidth',1.5)
 %     grid on
@@ -146,7 +147,7 @@ for n=1:nmax
 %     axis square;
 %     
 %     subplot(1,3,3)
-%     plot(xb,vc(:,Ny/2),'LineWidth',1.5)
+%     plot(xb,vb(:,Ny/2),'LineWidth',1.5)
 %     hold on
 %     plot(vref(:,1),vref(:,2),'LineWidth',1.5)
 %     grid on
@@ -168,12 +169,12 @@ end
 % 
 % Z0 = get(s,'ZData');
 % set(s,'ZData',Z0 - 1.1);
-% stream = streamline(xb,yc,uc',vc',startx,starty,[0.5]);
+% stream = streamline(xb,yb,ub',vb',startx,starty,[0.5]);
 % set(stream,'Color','#EDB120');
 % 
 % % plot 1D cuts:
 % subplot(1,3,2);
-% plot(uc(Nx/2,:)',yc,'LineWidth',1.5)
+% plot(ub(Nx/2,:)',yb,'LineWidth',1.5)
 % hold on
 % plot(uref(:,2),uref(:,1),'LineWidth',1.5)
 % grid on
@@ -183,7 +184,7 @@ end
 % axis square;
 % 
 % subplot(1,3,3);
-% plot(xb,vc(:,Ny/2),'LineWidth',1.5)
+% plot(xb,vb(:,Ny/2),'LineWidth',1.5)
 % hold on
 % plot(vref(:,1),vref(:,2),'LineWidth',1.5)
 % grid on

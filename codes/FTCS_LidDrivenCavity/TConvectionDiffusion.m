@@ -18,7 +18,7 @@ function T = TConvectionDiffusion(u,v,T,xb)
     
     % y direction
     gm(:,1     ) = 0; %0.5*v(:,1   ).*( T(:,1   ) + Tlake       ) - 0.5*abs(v(:,1   )).*( T(:,1   ) - Tlake       );
-    %gm(:,1     ) =-lambda*(T(:,1) - Tbottom)/(dy/2);
+    % gm(:,1     ) =-lambda*(T(:,1) - Tbottom)/(dy/2);
     gm(:,2:Ny  ) = 0.5*v(:,2:Ny).*( T(:,2:Ny) + T(:,1:Ny-1) ) - 0.5*abs(v(:,2:Ny)).*( T(:,2:Ny) - T(:,1:Ny-1) );
     gm(:,2:Ny  ) = gm(:,2:Ny  ) - lambda*(T(:,2:Ny) - T(:,1:Ny-1));
     gp(:,1:Ny-1) = gm(:,2:Ny  );
