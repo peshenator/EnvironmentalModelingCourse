@@ -1,97 +1,107 @@
-% implement the nonlnear advection and diffusion + buoyncy force (Bousinesque approximation)
-
-function [ustar,vstar] = MomConvectionDiffusion(u,v,T)
-global Nx Ny dt dx dy nu uLid beta T0 uWall vWall g;
+% update ustar,vstar with the convection and diffusion terms
+function [ustar,vstar] = MomConvectionDiffusion2(u,v,T)
+global Nx Ny dt dx dy nu uLid beta g T0;
 
 ustar = u;
 vstar = v;
 
-%% u-component of the valocity
+dtdx = dt/dx;
+dtdy = dt/dy;
 
-%SPACE LOOP
+dtdx2 = dt/dx^2;
+dtdy2 = dt/dy^2;
+
 for i=1:Nx+1
     for j=1:Ny
-
-        % x flux
-        if( i == 1)
-            ustar(i,j) = 0;         % wall boundary condition
-        elseif( i == Nx+1)
-            ustar(i,j) = 0;         % wall boundary conditon
+        % dU/dY
+        if ( j==1 )
+            vc = 0.5*( v(bcj_1(i-1,Nx),j+1) + v(bcj(i,Nx+1),j+1) );    % average v at the corners
+            vm  = 0.5*(vc - abs(vc));
+            vp = 0;
+            ustar(i,j) = ustar(i,j) - ...
+                        dtdy*( vm*( u(i,j+1)-u(i,j) ) + vp*( u(i,j)-0 ) ) ...
+                   + nu*dtdy2*(   ( u(i,j+1)-u(i,j) ) -  2*( u(i,j)-0 ) );    % 2 is from  /(dy/2)
+        elseif( j==Ny )
+            vm  = 0; 
+            vc = 0.5*( v(bcj_1(i-1,Nx),j  ) + v(bcj(i,Nx+1),j  ) );    % average v at the corners
+            vp  = 0.5*(vc + abs(vc)); 
+            ustar(i,j) = ustar(i,j) - ...
+                         dtdy*( vm*( uLid-u(i,j) ) + vp*( u(i,j)-u(i,j-1) ) ) ...
+                    + nu*dtdy2*( 2*( uLid  -u(i,j) ) -    ( u(i,j)-u(i,j-1) ) );    % 2 is from  /(dy/2)
         else
-            uav = 0.5*(u(i,j) + u(i-1,j));  % average velocity at the cell-centers
-            up  = 0.5*(uav + abs(uav));     % right moving wave
-            uav = 0.5*(u(i,j) + u(i+1,j));  % average velocity at the cell-centers
-            um  = 0.5*(uav - abs(uav));     % left moving wave
-            ustar(i,j) = ustar(i,j) - dt/dx*(um*(u(i+1,j)-u(i,j)) + up*(u(i,j) - u(i-1,j)))...  % convective terms
-                                    + nu*dt/dx*( (u(i+1,j)-u(i,j))/dx - (u(i,j)-u(i-1,j))/dx ); % diffusive terms
+            vc = 0.5*( v(bcj_1(i-1,Nx),j+1) + v(bcj(i,Nx+1),j+1) );    % average v at the corners
+            vm  = 0.5*(vc - abs(vc)); 
+            vc = 0.5*( v(bcj_1(i-1,Nx),j  ) + v(bcj(i,Nx+1),j  ) );    % average v at the corners
+            vp  = 0.5*(vc + abs(vc));
+            ustar(i,j) = ustar(i,j) - ...
+                         dtdy*( vm*( u(i,j+1)-u(i,j) ) + vp*( u(i,j)-u(i,j-1) ) ) ...
+                    + nu*dtdy2*(   ( u(i,j+1)-u(i,j) ) -    ( u(i,j)-u(i,j-1) ) );
         end
-
-        % y flux
-        if(j == 1)
-            vav = 0.5*( v(max(1,i-1),j+1) + v(min(Nx,i),j+1)); % velocity averages stored at the cell corners
-            vm  = 0.5*(vav - abs(vav));     % left going wave
-            ustar(i,j) = ustar(i,j) - dt/dy*( vm*(u(i,j+1)-u(i,j)) + vWall )... %; % convective terms
-                                    + nu*dt/dy*( (u(i,j+1)-u(i,j) )/dy -( u(i,j)-uWall )/(dy/2) );            
-        elseif(j == Ny)
-            vav = 0.5*( v(max(1,i-1),j) + v(min(Nx,i),j)); % velocity averages stored at the cell corners
-            vp  = 0.5*(vav + abs(vav));     % right going wave
-            ustar(i,j) = ustar(i,j) - dt/dy*( vWall + vp*(u(i,j)-u(i,j-1)) )... % ; % convective terms
-                                    + nu*dt/dy*( ( uLid-u(i,j) )/(dy/2) -( u(i,j)-u(i,j-1) )/dy );           
+        % dU/dX
+        if ( i==1 )
+            ustar(i,j) = 0; % wall (no-slip)
+        elseif(i==Nx+1)
+            ustar(i,j) = 0; % wall (no-slip)
         else
-            vav = 0.5*( v(max(1,i-1),j+1) + v(min(Nx,i),j+1)); % velocity averages stored at the cell corners
-            vm  = 0.5*(vav - abs(vav));     % left going wave
-            vav = 0.5*( v(max(1,i-1),j) + v(min(Nx,i),j)); % velocity averages stored at the cell corners
-            vp  = 0.5*(vav + abs(vav));     % right going wave
-            ustar(i,j) = ustar(i,j) - dt/dy*( vm*(u(i,j+1)-u(i,j)) + vp*(u(i,j)-u(i,j-1)) )... % convective terms
-                                   + nu*dt/dy*( (u(i,j+1)-u(i,j))/dy -(u(i,j)-u(i,j-1))/dy );
+            ub = 0.5*( u(i+1,j) + u(i,j) );     % compute average vel. at barycenter
+            um  = 0.5*( ub - abs(ub) );         % u^- in lecture notes 
+            ub = 0.5*( u(i,j) + u(i-1,j) );     % compute average vel. at barycenter
+            up  = 0.5*( ub + abs(ub) );         % u^+ in lecture notes 
+            ustar(i,j) = ustar(i,j) - ...
+                         dtdx*( um*( u(i+1,j)-u(i,j) ) + up*( u(i,j)-u(i-1,j) ) )...
+                    + nu*dtdx2*(   ( u(i+1,j)-u(i,j) ) -    ( u(i,j)-u(i-1,j) ) );
         end
     end
 end
 
-
-%% v-component of the valocity
-%SPACE LOOP
-
+%% v-component of the velocity:
 for i=1:Nx
     for j=1:Ny+1
-        % x flux
-        if(i == 1)
-            uav = 0.5*( u(i+1,max(1,j-1)) + u(i+1,min(Ny,j)) );
-            um = 0.5*(uav - abs(uav));
-            vstar(i,j) = vstar(i,j) - dt/dx*( uWall + um*(v(i+1,j)-v(i,j)) )... %;
-                                    + nu*dt/dx*( (v(i+1,j)-v(i,j))/dx - (v(i,j)-vWall)/(dx/2) );
-        elseif(i == Nx)
-            uav = 0.5*( u(i,max(1,j-1)) + u(i,min(Ny,j)) );
-            up = 0.5*(uav + abs(uav));
-            vstar(i,j) = vstar(i,j) - dt/dx*( up*(v(i,j)-v(i-1,j)) + uWall )... %;
-                                    + nu*dt/dx*( (vWall-v(i,j))/(dx/2) - (v(i,j)-v(i-1,j))/dx );
+        % dV/dX
+        if(i==1)
+            uc = 0.5*( u(i+1,bcj_1(j-1,Ny)) + u(i+1,bcj(j,Ny+1) ) );
+            um  = 0.5*( uc-abs(uc) );
+            up  = 0;
+            vstar(i,j) = vstar(i,j) - ...
+                        dtdx*( um*(v(i+1,j)-v(i,j)) + up*(v(i,j)-v(Nx,j)) ) ...
+                   + nu*dtdx2*(   (v(i+1,j)-v(i,j)) -  2*(v(i,j)-0      ) );
+        elseif(i==Nx)
+            um  = 0;
+            uc = 0.5*( u(i  ,bcj_1(j-1,Ny)) + u(i  ,bcj(j,Ny+1) ) );
+            up  = 0.5*(uc + abs(uc));           
+            vstar(i,j) = vstar(i,j) - ...
+                        dtdx*( um*(v(1,j)-v(i,j)) + up*(v(i,j)-v(i-1,j)) ) ...
+                   + nu*dtdx2*( 2*(0     -v(i,j)) -    (v(i,j)-v(i-1,j)) );
         else
-            uav = 0.5*( u(i,max(1,j-1)) + u(i,min(Ny,j)) );
-            up = 0.5*(uav + abs(uav));
-            uav = 0.5*( u(i+1,max(1,j-1)) + u(i+1,min(Ny,j)) );
-            um = 0.5*(uav - abs(uav));
-            vstar(i,j) = vstar(i,j) - dt/dx*( up*(v(i,j)-v(i-1,j)) + um*(v(i+1,j)-v(i,j)) )...
-                                   + nu*dt/dx*( (v(i+1,j)-v(i,j))/dx - (v(i,j)-v(i-1,j))/dx );
+            uc = 0.5*( u(i+1,bcj_1(j-1,Ny) ) + u(i+1,bcj(j,Ny+1) ) );   % u at the corners
+            um  = 0.5*( uc-abs(uc) );
+            uc = 0.5*( u(i  ,bcj_1(j-1,Ny) ) + u(i  ,bcj(j,Ny+1) ) );   % u at the corners
+            up  = 0.5*( uc+abs(uc) );
+            vstar(i,j) = vstar(i,j) ...
+                         - dtdx*( um*(v(i+1,j)-v(i,j)) + up*(v(i,j)-v(i-1,j)) ) ... 
+                     + nu*dtdx2*(    (v(i+1,j)-v(i,j)) -    (v(i,j)-v(i-1,j)) ); 
         end
-        
-        % y flux
+        % dV/dY
         if(j==1)
-            vstar(i,j) = 0;     % wall boundary condition
+            vstar(i,j) = 0;
         elseif(j==Ny+1)
             vstar(i,j) = 0;
         else
-            vav = 0.5*(v(i,j+1)+v(i,j));
-            vm  = 0.5*(vav - abs(vav));
-            vav = 0.5*(v(i,j) + v(i,j-1));
-            vp  = 0.5*(vav + abs(vav));
-            vstar(i,j) = vstar(i,j) - dt/dy*( vp*(v(i,j)-v(i,j-1)) + vm*(v(i,j+1)-v(i,j)) )...
-                                   +nu*dt/dy*( (v(i,j+1)-v(i,j))/dy - (v(i,j)-v(i,j-1))/dy );
-            
-            % add the buyoncy forces to the v velocity
-            Tav = 0.5*(T(i,j)+T(i,j-1)); % T cell centre -> average
-            vstar(i,j) = vstar(i,j) + dt*beta*g*(Tav - T0);
+            vac=0.5*(v(i,j+1)+v(i,j)); 
+            vm=0.5*(vac-abs(vac)); 
+            vac=0.5*(v(i,j)+v(i,j-1)); 
+            vp=0.5*(vac+abs(vac)); 
+            vstar(i,j) = vstar(i,j) ...
+                        - dtdy*( vm*(v(i,j+1)-v(i,j)) + vp*(v(i,j  )-v(i,j-1)) ) ... 
+                    + nu*dtdy2*(    (v(i,j+1)-v(i,j)) -    (v(i,j  )-v(i,j-1)) );
+            % add the buoyancy forces
+            Tav = 0.5*( T(i,j) + T(i,j-1) ); % average temperature 
+            vstar(i,j) = vstar(i,j) + dt*beta*g*(Tav - T0); 
         end
     end
 end
 
+%% Now, we add the explciit part of the pressure gradient: 
+% [ustar,vstar] = AddGradPressure(ustar,vstar,P,dt);
 end
+
