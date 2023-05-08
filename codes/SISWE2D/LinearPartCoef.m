@@ -22,7 +22,7 @@ Hx = Hmx./(Hmx + dt*gamma + bool);
 bool = (Hmy == 0); 
 Hy = Hmy./(Hmy + dt*gamma + bool);
 
-bool = (Hmx == 0); 
+bool = (Hmx == 0);  % this is simply a trick to avoid division by zero when H = 0
 Hmx = Hmx.^2./(Hmx + dt*gamma + bool);
 bool = (Hpx == 0); 
 Hpx = Hpx.^2./(Hpx + dt*gamma + bool);
