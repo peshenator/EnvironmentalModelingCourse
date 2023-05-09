@@ -1,4 +1,6 @@
-function T = TConvectionDiffusion(u,v,T,xb)
+% only convection part of the temperature equation, the diffusion part is implicit 
+% and goes to the CGsolver
+function T = TConvection(u,v,T,xb)
 
     global Nx Ny dx dy dt lambda TBC
 
