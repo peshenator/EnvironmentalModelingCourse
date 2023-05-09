@@ -13,7 +13,7 @@ global Nx Ny dx dy dt nu  uLid g beta T0 lambda uWall vWall vLid TBC xb yb;
 
 % physical parameters
 nu    = 1e-2;   % kinematic viscosity
-uLid  =-1;      % u velocity of the lid (top boundary)
+uLid  = 1;      % u velocity of the lid (top boundary)
 vLid  = 0;      % v velocity of the lid (top boundary)
 uWall = 0;      % u velocity at the walls
 vWall = 0;      % v velocity at the walls
@@ -21,7 +21,7 @@ g = 9.81;       % accelaration due to gravity
 T0 = 0;         % reference temperature
 TBC = 2;        % Boundary condition temperature
 lambda = 1e-3;  % thermal diffusivity
-beta = 1;       % thermal expansion coefficient = drho/dT
+beta = 0;       % thermal expansion coefficient = drho/dT
 
 % computational parameters
 time = 0;
@@ -52,7 +52,7 @@ rhs =zeros(Nx,Ny);                  % right hand-side for the pressure Poisson e
 
 for i = 1:Nx
     for j = 1:Ny
-       T(i,j) = T0+exp(-0.5*( (xb(i) - 0.2 )^2 + (yb(j) - 0.3)^2)/0.1^2 ); %cold bubble
+       T(i,j) = T0-exp(-0.5*( (xb(i) - 0.2 )^2 + (yb(j) - 0.8)^2)/0.1^2 ); %cold bubble
 %        T(i,j) = T0+exp(-0.5*( (xb(i) - 0.2 )^2 + (yb(j) - 0.25)^2)/0.1^2 ); %hot bubble
     end
 end
@@ -118,7 +118,7 @@ for n=1:nmax
     ub = 0.5*( u(2:Nx+1,:) + u(1:Nx,:) );
     vb = 0.5*( v(:,2:Ny+1) + v(:,1:Ny) );
     
-%     subplot(1,3,1)
+    subplot(1,3,1)
     hold off
     s = surf(xb,yb,T','EdgeColor','none','FaceColor','interp');%sqrt(ub.^2+vb.^2)'
 %     s = surf(xb(2:Nx-1),yb(2:Ny-1),abs(divuv(2:Nx-1,2:Ny-1))','EdgeColor','none','FaceColor','interp');
@@ -135,27 +135,27 @@ for n=1:nmax
 
 
     % plot 1D cuts:
-%     subplot(1,3,2)
-%     plot(ub(Nx/2,:)',yb,'LineWidth',1.5)
-%     hold on
-%     plot(uref(:,2),uref(:,1),'LineWidth',1.5)
-%     grid on
-%     xlabel('u velocity')
-%     ylabel('y')
-%     legend('SIMPLE','ref','Location','southeast')
-%     hold off
-%     axis square;
-%     
-%     subplot(1,3,3)
-%     plot(xb,vb(:,Ny/2),'LineWidth',1.5)
-%     hold on
-%     plot(vref(:,1),vref(:,2),'LineWidth',1.5)
-%     grid on
-%     xlabel('x')
-%     ylabel('v velocity')
-%     legend('SIMPLE','ref')
-%     hold off
-%     axis square;
+    subplot(1,3,2)
+    plot(ub(Nx/2,:)',yb,'LineWidth',1.5)
+    hold on
+    plot(uref(:,2),uref(:,1),'LineWidth',1.5)
+    grid on
+    xlabel('u velocity')
+    ylabel('y')
+    legend('SIMPLE','ref','Location','southeast')
+    hold off
+    axis square;
+    
+    subplot(1,3,3)
+    plot(xb,vb(:,Ny/2),'LineWidth',1.5)
+    hold on
+    plot(vref(:,1),vref(:,2),'LineWidth',1.5)
+    grid on
+    xlabel('x')
+    ylabel('v velocity')
+    legend('SIMPLE','ref')
+    hold off
+    axis square;
 
     pause(0.001)
     
