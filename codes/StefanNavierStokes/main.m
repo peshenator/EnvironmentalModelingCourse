@@ -39,13 +39,13 @@ cL   = 418.7;        % heat capacity of the liquid
 lambdaS   = KS/(rhoS*cS);
 lambdaL   = KL/(rhoL*cL);
 Tc   = -0.1;           % critical temperature of the phase change
-Pr = nu/lambdaL;     % Prdandtl number for liquid (momentum diff/themaal diff)
+Pr = nu/lambdaL;     % Prdandtl number for liquid (momentum diff/thermal diff)
 Re   = 1/nu;        % Reynolds number
 Pe   = Re*Pr;       % Peclet number (advective rate/diffusive rate)
 
 % computational parameters
 time = 0;
-tend = 10.25;
+tend = 1;
 
 xL = 0;
 xR = 1;
