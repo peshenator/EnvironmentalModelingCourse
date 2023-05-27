@@ -1,4 +1,4 @@
-function [Hmx,Hpx,Hmy,Hpy,Hx,Hy,tHx,tHy,rhs] = LinearPartCoef(Hb,u,v)
+function [Hmx,Hpx,Hmy,Hpy,Hx,Hy,tHx,tHy,rhs] = LinearPartCoeff(Hb,u,v)
 global g gamma dt dx dy Nx Ny
 
 Hmx   = zeros(Nx,Ny);  % total water depth on the cell faces [1:Nx]   in x

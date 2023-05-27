@@ -1,4 +1,4 @@
-function Meta = MatVecProd(etab,bathb,Hxm,Hxp,Hym,Hyp,wet)
+function Meta = MatVecProdNewton(etab,bathb,Hxm,Hxp,Hym,Hyp,wet)
 
     global g dt dx dy Nx Ny;
 
@@ -23,5 +23,9 @@ function Meta = MatVecProd(etab,bathb,Hxm,Hxp,Hym,Hyp,wet)
     fp(:,  Ny  ) = 0;
 
     Meta = Meta - ky*( fp - fm );
+
+    % for the Newton iterations we need to add p(eta)*eta to of M*eta, see
+    % the Matrix of the Newton method in the lecture
+    Meta = Meta + wet.*etab;
     
 end

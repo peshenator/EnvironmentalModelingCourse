@@ -1,6 +1,6 @@
 % constitutive flux for the bathymetry PDE
 
-function [fx,fy] = bflux(u,v,H)
+function [fx,fy] = BathFlux(u,v,H)
 global sA sm sUc sphi;
     % power-law DOI:10.1016/j.advwatres.2009.02.006
 
