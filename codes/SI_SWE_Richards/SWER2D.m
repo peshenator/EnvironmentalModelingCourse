@@ -101,46 +101,21 @@ for nt=1:1000000000
     for iOut=1:100 % outer Newton iterations
         % The task of the outer iterations is ONLY to 
         % linearize one of the two nonlinear functions Theta1 or Theta2 
-%         di = zeros(Nz+1,Nx); % set the derivative of the nonlinear function to zero 
-%         Mpsi = MatVecProd_psi(psi);  
-%         % compute the true nonlinear function f(psi)
-%         f(1:Nz,:) = Theta(psi(1:Nz,:)   )    + Mpsi(1:Nz,:)  - rhs(1:Nz,:); 
-%         f(Nz+1,:) = Height(psi(Nz+1,:),bath) + Mpsi(Nz+1 ,:) - rhs(Nz+1,:); 
-%         
-%         ResOut    = sqrt(sum(sum(f.*f))); % outer residual
         [ResOut,NormResOut] = ResidualOuter(psi,bath,rhs);
         disp(strcat(' Outer iteration = ', int2str(iOut), ', outres = ', num2str(NormResOut))); 
         if(NormResOut < tol)
-            break % tolerance has been reached 
+            break
         end
         psik = psi;          % save the value at the current outer iteration         
         psi = max(psi,psic); % initial guess for the inner iterations 
         % ------ Inner Iterations ---------------        
         for iInn = 1:100
-            di   = zeros(Nz+1,Nx);  
-            Mpsi = MatVecProd_psi(psi);   % linear part of the system 
-            
-            fk(1:Nz,:) = Theta1(psi(1:Nz,:)) - (Theta2(psik(1:Nz,:)) + dTheta2(psik(1:Nz,:)).*(psi(1:Nz,:)-psik(1:Nz,:))) + Mpsi(1:Nz,:) - rhs(1:Nz,:);  
-            di(1:Nz,:) = dTheta1(psi(1:Nz,:)) - dTheta2(psik(1:Nz,:)); 
-            
-            fk(Nz+1,:) = Height(psi(Nz+1,:),bath) + Mpsi(Nz+1,:) - rhs(Nz+1,:); % -(V2(psik(k,i))+dV2(psik(k,i))*(psi(k,i)-psik(k,i)))
-            di(Nz+1,:) = dHeight(psi(Nz+1,:),bath);                      % -dTheta2(psik(k,i))
-
-            for i=1:Nx
-                for k=1:Nz+1
-                    if(Kx(k,i) + Kx(k,i+1) + Kz(k,i) + Kz(k+1,i) == 0)
-                        fk(k,i)=0;
-                        di(k,i)=1; 
-                    end
-                end
-            end
-
-            NormResInn = sqrt(sum(sum(fk.*fk))); 
+            [ResInn,NormResInn] = ResidualInner(psi,psik,bath,rhs);
             disp(strcat('  - Inner iteration = ',int2str(iInn), ', inres = ', num2str(NormResInn))) 
             if(NormResInn < tol)
                 break
             end
-            [dpsi,CGres,CGk] = CGsolverPreCond(fk,@MatVecProd_psi);   % inner Newton step
+            [dpsi,CGres,CGk] = CGsolverPreCond(ResInn,@MatVecProd_psi);   % inner Newton step
             psi = psi - dpsi;
         end
     end 
