@@ -23,7 +23,7 @@ xL   = -1000; % left
 xR   = +1000; % right 
 zL   = -2;    % bottom 
 zR   = 0;     % surface
-Nx   = 100;   % horizontal 
+Nx   = 200;   % horizontal 
 Nz   = 20;    % vertical 
 dx   = (xR-xL)/Nx; % x mesh spacing 
 dz   = (zR-zL)/Nz; % y mesh spacing 
@@ -97,25 +97,28 @@ for nt=1:1000000000
     tol = 1e-7;   
     % initial guess
     psi(1:Nz,1:Nx) = min(psi(1:Nz,1:Nx),psic);
-    for iNewton=1:100 % outer Newton iterations
+    % ------------ Outer Iterations -------------
+    for iOut=1:100 % outer Newton iterations
         % The task of the outer iterations is ONLY to 
-        % linearize one of the two nonlinear functions q1 or q2 
-        di = zeros(Nz+1,Nx); % set the derivative of the nonlinear function to zero 
-        Mpsi = matop2D(psi);  
-        % compute the true nonlinear function f(psi)
-        f(1:Nz,:) = Theta(psi(1:Nz,:)   )    + Mpsi(1:Nz,:)  - rhs(1:Nz,:); 
-        f(Nz+1,:) = Height(psi(Nz+1,:),bath) + Mpsi(Nz+1 ,:) - rhs(Nz+1,:); 
-        
-        outres=sqrt(sum(sum(f.*f))); % outer residual
-        disp(strcat(' Outer iteration = ', int2str(iNewton), ', outres = ', num2str(outres))); 
-        if(outres<tol)
+        % linearize one of the two nonlinear functions Theta1 or Theta2 
+%         di = zeros(Nz+1,Nx); % set the derivative of the nonlinear function to zero 
+%         Mpsi = MatVecProd_psi(psi);  
+%         % compute the true nonlinear function f(psi)
+%         f(1:Nz,:) = Theta(psi(1:Nz,:)   )    + Mpsi(1:Nz,:)  - rhs(1:Nz,:); 
+%         f(Nz+1,:) = Height(psi(Nz+1,:),bath) + Mpsi(Nz+1 ,:) - rhs(Nz+1,:); 
+%         
+%         ResOut    = sqrt(sum(sum(f.*f))); % outer residual
+        [ResOut,NormResOut] = ResidualOuter(psi,bath,rhs);
+        disp(strcat(' Outer iteration = ', int2str(iOut), ', outres = ', num2str(NormResOut))); 
+        if(NormResOut < tol)
             break % tolerance has been reached 
         end
         psik = psi;          % save the value at the current outer iteration         
-        %psi = max(psi,psic); % initial guess for the inner iterations 
-        for inner = 1:100
+        psi = max(psi,psic); % initial guess for the inner iterations 
+        % ------ Inner Iterations ---------------        
+        for iInn = 1:100
             di   = zeros(Nz+1,Nx);  
-            Mpsi = matop2D(psi);   % linear part of the system 
+            Mpsi = MatVecProd_psi(psi);   % linear part of the system 
             
             fk(1:Nz,:) = Theta1(psi(1:Nz,:)) - (Theta2(psik(1:Nz,:)) + dTheta2(psik(1:Nz,:)).*(psi(1:Nz,:)-psik(1:Nz,:))) + Mpsi(1:Nz,:) - rhs(1:Nz,:);  
             di(1:Nz,:) = dTheta1(psi(1:Nz,:)) - dTheta2(psik(1:Nz,:)); 
@@ -132,17 +135,17 @@ for nt=1:1000000000
                 end
             end
 
-            inres = sqrt(sum(sum(fk.*fk))); 
-            disp(strcat('  - Inner iteration = ',int2str(inner), ', inres = ', num2str(inres))) 
-            if(inres<tol)
+            NormResInn = sqrt(sum(sum(fk.*fk))); 
+            disp(strcat('  - Inner iteration = ',int2str(iInn), ', inres = ', num2str(NormResInn))) 
+            if(NormResInn < tol)
                 break
             end
-            [dpsi,CGres,CGk] = CGop2Dpc(fk);   % inner Newton step
-            psi = psi - dpsi;      % update temperature at the inner iteration 
+            [dpsi,CGres,CGk] = CGsolverPreCond(fk,@MatVecProd_psi);   % inner Newton step
+            psi = psi - dpsi;
         end
     end 
     % now update the horizontal velocities
-    u(2:Nx) = (Fu(2:Nx) - g*dt/dx*(psi(Nz+1,2:Nx)-psi(Nz+1,1:Nx-1)))./( 1+dt*gamma./Hx(2:Nx) );
+    u(2:Nx) = (Fu(2:Nx) - g*dt/dx*(psi(Nz+1,2:Nx) - psi(Nz+1,1:Nx-1)))./( 1 + dt*gamma./Hx(2:Nx) );
 
     % update time
     t = t + dt;
