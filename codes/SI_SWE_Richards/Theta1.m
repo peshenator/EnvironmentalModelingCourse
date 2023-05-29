@@ -3,7 +3,7 @@ global alpha thetas thetar n m Ks psic
 
 
 logic = (psi <= psic);
-y = Thetaf(psi).*logic + (Thetaf(psic) + dTheta(psic)*(psi-psic)).*(~logic);
+y = Theta(psi).*logic + (Theta(psic) + dTheta(psic)*(psi-psic)).*(~logic);
 
 end
 

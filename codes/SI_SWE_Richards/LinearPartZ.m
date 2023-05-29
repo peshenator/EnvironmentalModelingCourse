@@ -1,4 +1,4 @@
-function [a,b,c,rhs] = LinearPartZ(theta,Fu,H,Kz)
+function [a,b,c,rhs] = LinearPartZ(theta,Fu,Hx,Kz)
 global dt dx dz Nx Nz
 
 a   = zeros(Nz+1,Nx);
@@ -29,6 +29,6 @@ rhs(2:Nz,:) = theta(2:Nz,:) + dtdz*(Kz(3:Nz+1,:) - Kz(2:Nz,:));
 rhs(Nz+1,:) = theta(Nz+1,:) + dtdz*(Kz(Nz+2  ,:) - Kz(Nz+1,:)); 
 % x fluxes with homogeneous Neumann BC 
 % = do nothing for Richards, but do something for the shallow water part ! 
-rhs(Nz+1,:) = rhs(Nz+1,:) - dtdx*(H(2:Nx+1).*Fu(2:Nx+1)-H(1:Nx).*Fu(1:Nx)); 
+rhs(Nz+1,:) = rhs(Nz+1,:) - dtdx*(Hx(2:Nx+1).*Fu(2:Nx+1)-Hx(1:Nx).*Fu(1:Nx)); 
 
 end

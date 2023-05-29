@@ -17,12 +17,12 @@ for k=1:2*N
         % abbiamo gia trovato la soluzione 
         return
     end
-    v = matop2D(p);           
-    alpha = sum(sum(sum(r.*z)));  
-    lambda = alpha/sum(sum(sum(p.*v))); 
-    x = x + lambda*p;         
-    r = r - lambda*v;         
-    z = precop(r);            
-    beta = sum(sum(sum(z.*r)))/alpha;  
+    v = matop2D(p);
+    alpha = sum(sum(sum(r.*z)));
+    lambda = alpha/sum(sum(sum(p.*v)));
+    x = x + lambda*p;
+    r = r - lambda*v;
+    z = precop(r);
+    beta = sum(sum(sum(z.*r)))/alpha;
     p = z + beta*p;           % nuova dir. di ricerca 
 end
