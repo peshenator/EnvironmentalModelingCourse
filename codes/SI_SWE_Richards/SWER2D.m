@@ -17,7 +17,7 @@ m       = 1 - 1/n;      % [-] parameter m
 alpha   = 1.9;          % [m^(-1)] 
 gamma   = 1e-2;         % friction coefficient 
 % critical value of psi where the maximum of the C=dTheta/dPsi is located 
-psic    = -1/alpha*((n-1)/n)^(1/n); 
+psic    = -1/alpha*( (n-1)/n )^(1/n); 
 % Domain 
 xL   = -1000; % left
 xR   = +1000; % right 
@@ -68,8 +68,9 @@ for nt=1:1000000000
         thetasum=sum(sum(theta))*dx*dz; 
     end
     % Compute depth of the free-surface layer at the cell-interfaces:
+    H = theta(Nz+1,:);
     Hx(1   ) = 0;
-    Hx(2:Nx) = max(0,max(psi(Nz+1,2:Nx),psi(Nz+1,1:Nx-1)));
+    Hx(2:Nx) = max(0,max(H(2:Nx),H(1:Nx-1)));
     Hx(Nx+1) = 0;
 
     % Compute hydraulic conductivities at the cell-interfaces 
@@ -92,7 +93,7 @@ for nt=1:1000000000
     % compute right hand side and the linear part of the system 
     [a,b,c,rhs] = LinearPartZ(theta,Fu,Hx,Kz);
     
-    % now we start with the nested Newton method
+    % Now, we start with the nested Newton method
     tol = 1e-7;   
     % initial guess
     psi(1:Nz,1:Nx) = min(psi(1:Nz,1:Nx),psic);
@@ -102,11 +103,11 @@ for nt=1:1000000000
         di = zeros(Nz+1,Nx); % set the derivative of the nonlinear function to zero 
         Mpsi = matop2D(psi);  
         % compute the true nonlinear function f(psi)
-        f(1:Nz,:) = Theta(psi(1:Nz,:))+Mpsi(1:Nz,:) - rhs(1:Nz,:); 
-        f(Nz+1,:) = Height(psi(Nz+1,:),0) + Mpsi(Nz+1 ,:) - rhs(Nz+1,:); 
+        f(1:Nz,:) = Theta(psi(1:Nz,:)   )    + Mpsi(1:Nz,:)  - rhs(1:Nz,:); 
+        f(Nz+1,:) = Height(psi(Nz+1,:),bath) + Mpsi(Nz+1 ,:) - rhs(Nz+1,:); 
         
         outres=sqrt(sum(sum(f.*f))); % outer residual
-        disp(sprintf(' Outer iteration %d, outres = %e ', iNewton, outres)); 
+        disp(strcat(' Outer iteration = ', int2str(iNewton), ', outres = ', num2str(outres))); 
         if(outres<tol)
             break % tolerance has been reached 
         end
@@ -119,8 +120,8 @@ for nt=1:1000000000
             fk(1:Nz,:) = Theta1(psi(1:Nz,:)) - (Theta2(psik(1:Nz,:)) + dTheta2(psik(1:Nz,:)).*(psi(1:Nz,:)-psik(1:Nz,:))) + Mpsi(1:Nz,:) - rhs(1:Nz,:);  
             di(1:Nz,:) = dTheta1(psi(1:Nz,:)) - dTheta2(psik(1:Nz,:)); 
             
-            fk(Nz+1,:) = Height(psi(Nz+1,:),0) + Mpsi(Nz+1,:) - rhs(Nz+1,:); % -(V2(psik(k,i))+dV2(psik(k,i))*(psi(k,i)-psik(k,i)))
-            di(Nz+1,:) = dHeight(psi(Nz+1,:),0);                      % -dTheta2(psik(k,i))
+            fk(Nz+1,:) = Height(psi(Nz+1,:),bath) + Mpsi(Nz+1,:) - rhs(Nz+1,:); % -(V2(psik(k,i))+dV2(psik(k,i))*(psi(k,i)-psik(k,i)))
+            di(Nz+1,:) = dHeight(psi(Nz+1,:),bath);                      % -dTheta2(psik(k,i))
 
             for i=1:Nx
                 for k=1:Nz+1
@@ -132,7 +133,7 @@ for nt=1:1000000000
             end
 
             inres = sqrt(sum(sum(fk.*fk))); 
-            disp(sprintf('  - Inner iteration %d, inres = %e ', inner, inres)) 
+            disp(strcat('  - Inner iteration = ',int2str(inner), ', inres = ', num2str(inres))) 
             if(inres<tol)
                 break
             end
@@ -154,21 +155,23 @@ for nt=1:1000000000
     axis([xL xR 0 0.7])
     xlabel('x')
     ylabel('\eta')
+    title(strcat('t = ',num2str(t))) 
 
     subplot(3,1,2) 
     surf(x,z,psi(1:Nz,:),'EdgeColor','none','FaceColor','interp')   
     xlabel('x')
     ylabel('z')
     zlabel('\psi')
-    view([0 90])
+    % view([0 90])
+    title('\psi') 
     
     subplot(3,1,3) 
     surf(x,z,Theta(psi(1:Nz,:)),'EdgeColor','none','FaceColor','interp')   
-    title(sprintf('Current time = %f',t)) 
     xlabel('x')
     ylabel('z')
     zlabel('\theta(\psi)')
-    view([0 90])
+    % view([0 90])
+    title('\theta(\psi)') 
     
     pause(0.0001) 
 
