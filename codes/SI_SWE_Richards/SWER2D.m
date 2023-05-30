@@ -4,7 +4,7 @@ clear;
 % close all;
 clc
 global alpha thetas thetar n m Ks psic 
-global dx dz dt K Kx Kz Nx Nz di Hx KL g 
+global dx dz dt K Kx Kz Nx Nz di Hx KL g gamma
 global a b c 
 % Physical model parameters in SI units 
 day     = 24*3600;    
@@ -29,7 +29,7 @@ dx   = (xR-xL)/Nx; % x mesh spacing
 dz   = (zR-zL)/Nz; % y mesh spacing 
 x    = linspace(xL+dx/2,xR-dx/2,Nx); 
 z    = linspace(zL+dz/2,zR-dz/2,Nz); 
-tend = 1e6;   % set the final simulation time 
+tend = 3000;   % set the final simulation time 
 t    = 0;     % initial time 
 % set the initial condition for pressure head
 psi  = zeros(Nz+1,Nx);
@@ -57,47 +57,20 @@ for nt=1:1000000000
     if(t>=tend)
         break
     end
-    % Compute volume and hydraulic conductivity at the cell-centers
-    theta(1:Nz,:) = Theta(psi(1:Nz,:));         % porous medium
-    theta(Nz+1,:) = Height(psi(Nz+1,:),bath);   % free surface layer
-    K(1:Nz,:) = Kfun(psi(1:Nz,:));              % porous medium
-    K(Nz+1,:) = Kfun(psi(Nz+1,:));              % free surface layer
 
-    thetan = theta; 
-    if(nt==1)
-        thetasum=sum(sum(theta))*dx*dz; 
-    end
-    % Compute depth of the free-surface layer at the cell-interfaces:
-    H = theta(Nz+1,:);
-    Hx(1   ) = 0;
-    Hx(2:Nx) = max(0,max(H(2:Nx),H(1:Nx-1)));
-    Hx(Nx+1) = 0;
-
-    % Compute hydraulic conductivities at the cell-interfaces 
-    % inside of the porous medium:
-    Kx(1:Nz,1   ) = 0;
-    Kx(1:Nz,2:Nx) = max(K(1:Nz,2:Nx),K(1:Nz,1:Nx-1));
-    Kx(1:Nz,Nx+1) = 0;
-    % artificial hydraulic conductivity in the free surface:
-    Kx(Nz+1,:)    = g*dt*Hx.^2./(Hx + dt*gamma + 1e-14);
-
-    Kz(1     ,1:Nx) = 0;
-    Kz(2:Nz+1,1:Nx) = max(K(2:Nz+1,1:Nx),K(1:Nz,1:Nx));
-    Kz(Nz+2  ,1:Nx) = 0;
-    %Kz(Nz+1,:)=0e-13;
-
-    
     % nonlinear convection of the free surface flow
     Fu = u; 
     
     % compute right hand side and the linear part of the system 
-    [a,b,c,rhs] = LinearPartZ(theta,Fu,Hx,Kz);
-    
+    [a,b,c,theta,rhs] = LinearPartZ(psi,theta,bath,Fu);
+    if(nt==1)
+        thetasum=sum(sum(theta))*dx*dz; 
+    end 
+   
     % Now, we start with the nested Newton method
     tol = 1e-7;   
-    % initial guess
-    psi(1:Nz,1:Nx) = min(psi(1:Nz,1:Nx),psic);
     % ------------ Outer Iterations -------------
+    psi(1:Nz,1:Nx) = min(psi(1:Nz,1:Nx),psic);  % initial guess for the outer iterations
     for iOut=1:100 % outer Newton iterations
         % The task of the outer iterations is ONLY to 
         % linearize one of the two nonlinear functions Theta1 or Theta2 
@@ -107,15 +80,15 @@ for nt=1:1000000000
             break
         end
         psik = psi;          % save the value at the current outer iteration         
-        psi = max(psi,psic); % initial guess for the inner iterations 
         % ------ Inner Iterations ---------------        
+        % psi = max(psi,psic); % initial guess for the inner iterations 
         for iInn = 1:100
             [ResInn,NormResInn] = ResidualInner(psi,psik,bath,rhs);
             disp(strcat('  - Inner iteration = ',int2str(iInn), ', inres = ', num2str(NormResInn))) 
             if(NormResInn < tol)
                 break
             end
-            [dpsi,CGres,CGk] = CGsolverPreCond(ResInn,@MatVecProd_psi);   % inner Newton step
+            [dpsi,CGres,CGk] = CGsolver(ResInn,@MatVecProd_psi);   % inner Newton step
             psi = psi - dpsi;
         end
     end 
