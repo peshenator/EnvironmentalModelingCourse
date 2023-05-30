@@ -1,4 +1,4 @@
-% Matrix-free conjugate gradient for A*x = b
+% Matrix-free conjugate gradient for A*x = rhs
 function [x,err,k] = CGsolver(rhs,MatVecProd)
 
 tol = 1e-12;
